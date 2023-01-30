@@ -1,0 +1,5 @@
+mdb-parser==0.0.3
+pandas==1.4.3
+setuptools==60.2.0
+numpy==1.23.3
+xlsx2csv==0.8.0
