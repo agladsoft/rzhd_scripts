@@ -51,7 +51,8 @@ class RZHD(object):
         dict_columns_eng: dict = {}
         for column, columns in itertools.product(df.columns, headers_eng):
             for column_eng in columns:
-                if column == column_eng:
+                column = column.strip()
+                if column == column_eng.strip():
                     dict_columns_eng[column] = headers_eng[columns]
         df.rename(columns=dict_columns_eng, inplace=True)
 
@@ -74,9 +75,6 @@ class RZHD(object):
             with contextlib.suppress(Exception):
                 if key in list_of_float_type:
                     data[key] = float(value)
-                elif key in list_of_str_type:
-                    if value in ['True', 'False']:
-                        data[key] = str(int(value == 'True'))
                 elif key in list_of_date_type:
                     data[key] = self.convert_format_date(value)
                 elif key in list_of_int_type:
