@@ -1,6 +1,6 @@
 #!/bin/bash
 
-xls_path="${XL_IDP_PATH_FTS}/flat_rzhd"
+xls_path="${XL_IDP_PATH_RZHD}/flat_rzhd"
 
 csv_path="${xls_path}"/csv
 if [ ! -d "$csv_path" ]; then
@@ -38,21 +38,33 @@ do
   then
     echo "Will convert XLSX or XLSM '${file}' to CSV '${csv_name}'"
     xlsx2csv "${file}" > "${csv_name}"
+  elif [[ ${mime_type} = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ]]
+  then
+    echo "Will convert XLSX or XLSM '${file}' to CSV '${csv_name}'"
+    xlsx2csv "${file}" > "${csv_name}"
   else
     echo "ERROR: unsupported format ${mime_type}"
     mv "${file}" "${xls_path}/error_$(basename "${file}")"
     continue
   fi
 
-  python3 ${XL_IDP_ROOT_FTS}/scripts/flat_rzhd.py "${csv_name}" "${json_path}"
-
   if [ $? -eq 0 ]
 	then
 	  mv "${file}" "${done_path}"
-	  mv "${csv_name}" "${done_path}"
 	else
 	  echo "ERROR during convertion ${file} to csv!"
 	  mv "${file}" "${xls_path}/error_$(basename "${file}")"
+	  continue
+	fi
+
+  python3 ${XL_IDP_ROOT_RZHD}/scripts/flat_rzhd.py "${csv_name}" "${json_path}"
+
+  if [ $? -eq 0 ]
+	then
+	  mv "${csv_name}" "${done_path}"
+	else
+	  echo "ERROR during convertion ${file} to json!"
+	  mv "${csv_name}" "${xls_path}/error_$(basename "${csv_name}")"
 	  continue
 	fi
 

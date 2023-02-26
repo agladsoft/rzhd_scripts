@@ -17,7 +17,7 @@ class RZHD(object):
         self.folder: str = folder
 
     @staticmethod
-    def divide_chunks(list_data: list, chunk: int) -> Generator[list]:
+    def divide_chunks(list_data: list, chunk: int) -> Generator:
         """
         Divide by chunks of a list.
         """
@@ -30,7 +30,7 @@ class RZHD(object):
         Convert to a date type.
         """
         if date_of_registration := re.findall(r'\d{1,2}/\d{1,2}/\d{2,4}|\d{1,2}[.]\d{1,2}[.]\d{2,4}', date):
-            for date_format in date_formats:
+            for date_format in DATE_FORMATS:
                 with contextlib.suppress(ValueError):
                     return str(datetime.datetime.strptime(date_of_registration[0], date_format).date())
         return date
@@ -49,11 +49,11 @@ class RZHD(object):
         Rename of a columns.
         """
         dict_columns_eng: dict = {}
-        for column, columns in itertools.product(df.columns, headers_eng):
+        for column, columns in itertools.product(df.columns, HEADERS_ENG):
             for column_eng in columns:
-                column = column.strip()
-                if column == column_eng.strip():
-                    dict_columns_eng[column] = headers_eng[columns]
+                column_strip: str = column.strip()
+                if column_strip == column_eng.strip():
+                    dict_columns_eng[column] = HEADERS_ENG[columns]
         df.rename(columns=dict_columns_eng, inplace=True)
 
     def convert_csv_to_dict(self) -> list:
@@ -73,11 +73,11 @@ class RZHD(object):
         """
         for key, value in data.items():
             with contextlib.suppress(Exception):
-                if key in list_of_float_type:
+                if key in LIST_OF_FLOAT_TYPE:
                     data[key] = float(value)
-                elif key in list_of_date_type:
+                elif key in LIST_OF_DATE_TYPE:
                     data[key] = self.convert_format_date(value)
-                elif key in list_of_int_type:
+                elif key in LIST_OF_INT_TYPE:
                     data[key] = self.convert_to_int(value)
 
     def save_data_to_file(self, i: int) -> None:
