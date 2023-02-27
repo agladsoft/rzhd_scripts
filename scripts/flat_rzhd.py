@@ -93,15 +93,15 @@ class RZHD(object):
 if __name__ == "__main__":
     input_file_path: str = os.path.abspath(sys.argv[1])
     output_folder: str = sys.argv[2]
-    fts: RZHD = RZHD(input_file_path, output_folder)
-    parsed_data: list = fts.convert_csv_to_dict()
+    rzhd: RZHD = RZHD(input_file_path, output_folder)
+    parsed_data: list = rzhd.convert_csv_to_dict()
     original_file_index: int = 0
-    divided_parsed_data: list = list(fts.divide_chunks(parsed_data, 50000))
+    divided_parsed_data: list = list(rzhd.divide_chunks(parsed_data, 50000))
     for index, chunk_parsed_data in enumerate(divided_parsed_data):
         for dict_data in chunk_parsed_data:
-            fts.change_type(dict_data)
+            rzhd.change_type(dict_data)
             dict_data['original_file_name'] = os.path.basename(input_file_path)
             dict_data['original_file_parsed_on'] = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             dict_data['original_file_index'] = original_file_index
             original_file_index += 1
-        fts.save_data_to_file(index)
+        rzhd.save_data_to_file(index)

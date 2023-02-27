@@ -67,7 +67,6 @@ HEADERS_ENG: dict = {
         "code_of_conditional_type_of_wagon",
     ("Кол-во*вагонов", "Количество Вагонов"): "quantity_of_wagons",
     ("Кол-во*контейнеров", "Количество Контейнеров"): "quantity_of_containers",
-
     ("Месяц", "Месяц отправления"): "departure_month",
     ("Месяц приема груза к перевозке",): "month_of_acceptance_of_cargo_for_transportation",
     ("Месяц раскредитования",): "crediting_month",
@@ -154,5 +153,6 @@ DATE_FORMATS: tuple = ("%m/%d/%y", "%d.%m.%Y")
 LIST_OF_FLOAT_TYPE: list = ["weight"]
 LIST_OF_INT_TYPE: list = ["wagon_number", "cargo_code_of_the_etsng", "shipper_okpo", "departure_station_code_of_rf",
                           "consignee_okpo", "destination_station_code_of_rf", "carriage_fee", "cargo_class",
-                          "departure_station_code_of_cis", "destination_station_code_of_cis"]
+                          "departure_station_code_of_cis", "destination_station_code_of_cis",
+                          "code_of_conditional_type_of_wagon"]
 LIST_OF_DATE_TYPE: list = ["departure_date"]
