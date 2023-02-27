@@ -148,13 +148,34 @@ HEADERS_ENG: dict = {
     ("ДФЭ",): "teu"
 }
 
-DATE_FORMATS: tuple = ("%m/%d/%y", "%d.%m.%Y")
+DATE_FORMATS: tuple = ("%m/%d/%y", "%d.%m.%Y", "%Y-%m-%d %H:%M:%S", "%m/%d/%Y")
 
-LIST_OF_FLOAT_TYPE: list = ["weight"]
-LIST_OF_INT_TYPE: list = ["wagon_number", "cargo_code_of_the_etsng", "shipper_okpo", "departure_station_code_of_rf",
-                          "consignee_okpo", "destination_station_code_of_rf", "carriage_fee", "cargo_class",
-                          "departure_station_code_of_cis", "destination_station_code_of_cis",
-                          "code_of_conditional_type_of_wagon", "wagon_kilometers",
-                          "cargo_code_according_to_the_harmonized_nomenclature_of_goods_gng", "quantity_of_wagons",
-                          "quantity_of_containers", "transportation_volume_tons"]
-LIST_OF_DATE_TYPE: list = ["departure_date"]
+LIST_OF_FLOAT_TYPE: list = [
+    "weight",
+    "cargo_turnover",
+    "discount_amount",
+    "teu"
+]
+LIST_OF_INT_TYPE: list = [
+    "wagon_kilometers",
+    "tara_weight_of_an_empty",
+    "cargo_class",
+    "cargo_code_okved",
+    "rolling_stock_code",
+    "quantity_of_wagons",
+    "quantity_of_containers",
+    "transportation_volume_tons",
+    "transportation_volume_kg",
+    "carriage_fee",
+    "tariff_distance",
+    "number_of_cargo_acceptances_for_transportation"
+]
+LIST_OF_DATE_TYPE: list = [
+    "departure_date",
+    "arrival_date",
+    "date_of_disbursement",
+    "departure_day_report",
+    "planned_arrival_date",
+    "estimated_date_of_arrival",
+    "actual_date_of_arrival"
+]
