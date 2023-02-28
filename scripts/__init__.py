@@ -174,6 +174,7 @@ LIST_OF_INT_TYPE: list = [
     "transportation_volume_kg",
     "carriage_fee",
     "tariff_distance",
+    "sign_of_the_exclusive_tariff",
     "number_of_cargo_acceptances_for_transportation"
 ]
 LIST_OF_DATE_TYPE: list = [
@@ -183,5 +184,7 @@ LIST_OF_DATE_TYPE: list = [
     "departure_day_report",
     "planned_arrival_date",
     "estimated_date_of_arrival",
-    "actual_date_of_arrival"
+    "actual_date_of_arrival",
+    "arrival_day_report",
+    "date_csm"
 ]
