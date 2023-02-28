@@ -148,11 +148,17 @@ HEADERS_ENG: dict = {
     ("ДФЭ",): "teu"
 }
 
-DATE_FORMATS: tuple = ("%m/%d/%y", "%d.%m.%Y", "%Y-%m-%d %H:%M:%S", "%m/%d/%Y")
+DATE_FORMATS: list = [
+    "%m/%d/%y",
+    "%d.%m.%Y",
+    "%Y-%m-%d %H:%M:%S",
+    "%m/%d/%Y",
+    "%d%b%Y"
+]
 
 LIST_OF_FLOAT_TYPE: list = [
     "weight",
-    "cargo_turnover",
+    "cargo_turnovertuple",
     "discount_amount",
     "teu"
 ]
