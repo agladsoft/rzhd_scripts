@@ -188,3 +188,8 @@ LIST_OF_DATE_TYPE: list = [
     "arrival_day_report",
     "date_csm"
 ]
+LIST_SPLIT_MONTH: list = [
+    "departure_month",
+    "crediting_month",
+    "month_of_acceptance_of_cargo_for_transportation",
+]

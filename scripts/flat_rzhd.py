@@ -29,10 +29,9 @@ class RZHD(object):
         """
         Convert to a date type.
         """
-        if date_of_registration := re.findall(r'\d{1,2}/\d{1,2}/\d{2,4}|\d{1,2}[.]\d{1,2}[.]\d{2,4}', date):
-            for date_format in DATE_FORMATS:
-                with contextlib.suppress(ValueError):
-                    return str(datetime.datetime.strptime(date_of_registration[0], date_format).date())
+        for date_format in DATE_FORMATS:
+            with contextlib.suppress(ValueError):
+                return str(datetime.datetime.strptime(date, date_format).date())
         return date
 
     @staticmethod
@@ -42,6 +41,18 @@ class RZHD(object):
         """
         with contextlib.suppress(ValueError):
             return int(int_value)
+
+    @staticmethod
+    def split_month_and_year(data: dict, key: str, value: str) -> None:
+        """
+        Split month and year.
+        """
+        try:
+            year, month = value.split("/")
+            data[key] = int(month)
+            data[key.replace("month", "year")] = int(year)
+        except (AttributeError, ValueError):
+            data[key] = value
 
     @staticmethod
     def rename_columns(df: DataFrame) -> None:
@@ -64,6 +75,8 @@ class RZHD(object):
         df.replace({np.NAN: None}, inplace=True)
         df = df.dropna(axis=0, how='all')
         df = df.dropna(axis=1, how='all')
+        for column in LIST_SPLIT_MONTH:
+            df[column.replace("month", "year")] = None
         self.rename_columns(df)
         return df.to_dict('records')
 
@@ -74,11 +87,13 @@ class RZHD(object):
         for key, value in data.items():
             with contextlib.suppress(Exception):
                 if key in LIST_OF_FLOAT_TYPE:
-                    data[key] = float(value)
+                    data[key] = float(value.replace(',', '.'))
                 elif key in LIST_OF_DATE_TYPE:
                     data[key] = self.convert_format_date(value)
                 elif key in LIST_OF_INT_TYPE:
                     data[key] = self.convert_to_int(value)
+                elif key in LIST_SPLIT_MONTH:
+                    self.split_month_and_year(data, key, value)
 
     def save_data_to_file(self, i: int) -> None:
         """
