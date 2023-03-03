@@ -166,7 +166,6 @@ LIST_OF_INT_TYPE: list = [
     "wagon_kilometers",
     "tara_weight_of_an_empty",
     "cargo_class",
-    "cargo_code_okved",
     "rolling_stock_code",
     "quantity_of_wagons",
     "quantity_of_containers",
