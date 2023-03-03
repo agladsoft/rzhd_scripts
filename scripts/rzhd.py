@@ -7,7 +7,7 @@ import contextlib
 import numpy as np
 from __init__ import *
 from typing import Generator
-from pandas import DataFrame, read_csv
+from pandas import DataFrame, read_csv, read_excel
 
 
 class RZHD(object):
@@ -66,11 +66,14 @@ class RZHD(object):
                     dict_columns_eng[column] = HEADERS_ENG[columns]
         df.rename(columns=dict_columns_eng, inplace=True)
 
-    def convert_csv_to_dict(self) -> list:
+    def convert_csv_to_dict(self, xlsb) -> list:
         """
         Csv data representation in json.
         """
-        df: DataFrame = read_csv(self.filename, low_memory=False, dtype=str)
+        if xlsb:
+            df: DataFrame = read_excel(self.filename, sheet_name=0, engine=xlsb, dtype=str)
+        else:
+            df: DataFrame = read_csv(self.filename, low_memory=False, dtype=str)
         df.replace({np.NAN: None}, inplace=True)
         df = df.dropna(axis=0, how='all')
         df = df.dropna(axis=1, how='all')
@@ -94,28 +97,29 @@ class RZHD(object):
                 elif key in LIST_SPLIT_MONTH:
                     self.split_month_and_year(data, key, value)
 
-    def save_data_to_file(self, i: int) -> None:
+    def save_data_to_file(self, i: int, chunk_data: list) -> None:
         """
         Save a data to a file.
         """
         basename: str = os.path.basename(self.filename)
         output_file_path: str = os.path.join(self.folder, f'{basename}_{i}.json')
         with open(f"{output_file_path}", 'w', encoding='utf-8') as f:
-            json.dump(chunk_parsed_data, f, ensure_ascii=False, indent=4)
+            json.dump(chunk_data, f, ensure_ascii=False, indent=4)
+
+    def main(self, xlsb=None) -> None:
+        parsed_data: list = self.convert_csv_to_dict(xlsb)
+        original_file_index: int = 0
+        divided_parsed_data: list = list(self.divide_chunks(parsed_data, 50000))
+        for index, chunk_parsed_data in enumerate(divided_parsed_data):
+            for dict_data in chunk_parsed_data:
+                self.change_type(dict_data)
+                dict_data['original_file_name'] = os.path.basename(self.filename)
+                dict_data['original_file_parsed_on'] = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                dict_data['original_file_index'] = original_file_index
+                original_file_index += 1
+            self.save_data_to_file(index, chunk_parsed_data)
 
 
 if __name__ == "__main__":
-    input_file_path: str = os.path.abspath(sys.argv[1])
-    output_folder: str = sys.argv[2]
-    rzhd: RZHD = RZHD(input_file_path, output_folder)
-    parsed_data: list = rzhd.convert_csv_to_dict()
-    original_file_index: int = 0
-    divided_parsed_data: list = list(rzhd.divide_chunks(parsed_data, 50000))
-    for index, chunk_parsed_data in enumerate(divided_parsed_data):
-        for dict_data in chunk_parsed_data:
-            rzhd.change_type(dict_data)
-            dict_data['original_file_name'] = os.path.basename(input_file_path)
-            dict_data['original_file_parsed_on'] = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-            dict_data['original_file_index'] = original_file_index
-            original_file_index += 1
-        rzhd.save_data_to_file(index)
+    rzhd: RZHD = RZHD(os.path.abspath(sys.argv[1]), sys.argv[2])
+    rzhd.main()

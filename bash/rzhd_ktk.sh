@@ -25,6 +25,8 @@ do
     continue
   fi
 
+  is_xlsb=false
+
 	mime_type=$(file -b --mime-type "$file")
   echo "'${file} - ${mime_type}'"
 
@@ -38,10 +40,11 @@ do
   then
     echo "Will convert XLSX or XLSM '${file}' to CSV '${csv_name}'"
     xlsx2csv "${file}" > "${csv_name}"
-  elif [[ ${mime_type} = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ]]
+  elif [[ ${mime_type} = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" && "${file}" == *"xlsb"* ]]
   then
+    is_xlsb=true
     echo "Will convert XLSX or XLSM '${file}' to CSV '${csv_name}'"
-    xlsx2csv "${file}" > "${csv_name}"
+    python3 ${XL_IDP_ROOT_RZHD}/scripts/rzhd_xlsb.py "${file}" "${json_path}"
   else
     echo "ERROR: unsupported format ${mime_type}"
     mv "${file}" "${xls_path}/error_$(basename "${file}")"
@@ -57,15 +60,20 @@ do
 	  continue
 	fi
 
-  python3 ${XL_IDP_ROOT_RZHD}/scripts/rzhd.py "${csv_name}" "${json_path}"
-
-  if [ $? -eq 0 ]
+	if [[ ${is_xlsb} = false ]]
 	then
-	  mv "${csv_name}" "${done_path}"
-	else
-	  echo "ERROR during convertion ${file} to json!"
-	  mv "${csv_name}" "${xls_path}/error_$(basename "${csv_name}")"
-	  continue
+
+	  python3 ${XL_IDP_ROOT_RZHD}/scripts/rzhd.py "${csv_name}" "${json_path}"
+
+    if [ $? -eq 0 ]
+    then
+      mv "${csv_name}" "${done_path}"
+    else
+      echo "ERROR during convertion ${file} to json!"
+      mv "${csv_name}" "${xls_path}/error_$(basename "${csv_name}")"
+      continue
+    fi
+
 	fi
 
 done
