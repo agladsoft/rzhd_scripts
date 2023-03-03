@@ -1,6 +1,6 @@
 #!/bin/bash
 
-xls_path="${XL_IDP_PATH_RZHD}/flat_rzhd"
+xls_path="${XL_IDP_PATH_RZHD}/rzhd_petersburg"
 
 csv_path="${xls_path}"/csv
 if [ ! -d "$csv_path" ]; then
@@ -57,7 +57,7 @@ do
 	  continue
 	fi
 
-  python3 ${XL_IDP_ROOT_RZHD}/scripts/flat_rzhd.py "${csv_name}" "${json_path}"
+  python3 ${XL_IDP_ROOT_RZHD}/scripts/rzhd.py "${csv_name}" "${json_path}"
 
   if [ $? -eq 0 ]
 	then
