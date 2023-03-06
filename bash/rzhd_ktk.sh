@@ -45,6 +45,10 @@ do
     is_xlsb=true
     echo "Will convert XLSX or XLSM '${file}' to CSV '${csv_name}'"
     python3 ${XL_IDP_ROOT_RZHD}/scripts/rzhd_xlsb.py "${file}" "${json_path}"
+  elif [[ ${mime_type} = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ]]
+  then
+    echo "Will convert XLSX or XLSM '${file}' to CSV '${csv_name}'"
+    xlsx2csv "${file}" > "${csv_name}"
   else
     echo "ERROR: unsupported format ${mime_type}"
     mv "${file}" "${xls_path}/error_$(basename "${file}")"
