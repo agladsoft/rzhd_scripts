@@ -1,12 +1,13 @@
 import os
 import sys
 import json
-import datetime
+import math
 import itertools
 import contextlib
 import numpy as np
 from __init__ import *
 from typing import Generator
+from datetime import datetime, timedelta
 from pandas import DataFrame, read_csv, read_excel
 
 
@@ -22,16 +23,6 @@ class RZHD(object):
         """
         for i in range(0, len(list_data), chunk):
             yield list_data[i:i + chunk]
-
-    @staticmethod
-    def convert_format_date(date: str) -> str:
-        """
-        Convert to a date type.
-        """
-        for date_format in DATE_FORMATS:
-            with contextlib.suppress(ValueError):
-                return str(datetime.datetime.strptime(date, date_format).date())
-        return date
 
     @staticmethod
     def convert_to_int(int_value: str) -> int:
@@ -65,6 +56,32 @@ class RZHD(object):
                 if column_strip == column_eng.strip():
                     dict_columns_eng[column] = HEADERS_ENG[columns]
         df.rename(columns=dict_columns_eng, inplace=True)
+
+    @staticmethod
+    def convert_xlsx_datetime_to_date(xlsx_datetime: float) -> str:
+        """
+        Convert date to %Y-%m-%d from xlsx value.
+        """
+        days: float
+        portion: float
+        temp_date: datetime = datetime(1899, 12, 30)
+        (days, portion) = math.modf(xlsx_datetime)
+        delta_days: timedelta = timedelta(days=days)
+        secs: int = int(24 * 60 * 60 * portion)
+        delta_seconds: timedelta = timedelta(seconds=secs)
+        time: datetime = (temp_date + delta_days + delta_seconds)
+        return time.strftime("%Y-%m-%d")
+
+    def convert_format_date(self, date: str) -> str:
+        """
+        Convert to a date type.
+        """
+        for date_format in DATE_FORMATS:
+            with contextlib.suppress(ValueError):
+                return str(datetime.strptime(date, date_format).date())
+        if date.isdigit():
+            return self.convert_xlsx_datetime_to_date(float(date))
+        return date
 
     def convert_csv_to_dict(self, xlsb) -> list:
         """
@@ -114,7 +131,7 @@ class RZHD(object):
             for dict_data in chunk_parsed_data:
                 self.change_type(dict_data)
                 dict_data['original_file_name'] = os.path.basename(self.filename)
-                dict_data['original_file_parsed_on'] = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                dict_data['original_file_parsed_on'] = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 dict_data['original_file_index'] = original_file_index
                 original_file_index += 1
             self.save_data_to_file(index, chunk_parsed_data)

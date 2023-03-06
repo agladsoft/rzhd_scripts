@@ -43,7 +43,8 @@ do
   elif [[ ${mime_type} = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" && "${file}" == *"xlsb"* ]]
   then
     is_xlsb=true
-    echo "Will convert XLSX or XLSM '${file}' to CSV '${csv_name}'"
+    rm "${csv_name}"
+    echo "Will convert XLSB or XLSM '${file}' to CSV '${csv_name}'"
     python3 ${XL_IDP_ROOT_RZHD}/scripts/rzhd_xlsb.py "${file}" "${json_path}"
   elif [[ ${mime_type} = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ]]
   then
