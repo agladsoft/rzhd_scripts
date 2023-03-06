@@ -7,7 +7,7 @@ HEADERS_ENG: dict = {
     ("Арендатор вагона по внутреннему справочнику",): "wagon_tenant_according_to_internal_directory",
     ("Вагона-км", "Вагоно-км"): "wagon_kilometers",
     ("Вес",): "weight",
-    ("Вес тары*порож ваг", "Вес* тары порож ваг"): "tara_weight_of_an_empty wagon",
+    ("Вес тары*порож ваг", "Вес* тары порож ваг"): "tara_weight_of_an_empty_wagon",
     ("Вид перевозки", "Тип транспортировки"): "type_of_transportation",
     ("Вид сообщения",): "type_of_communication_between_countries_by_rail",
     ("Вид контейнера", "Вид специального контейнера", "Вид спецконтейнера", "Тип контейнера"):
@@ -60,8 +60,8 @@ HEADERS_ENG: dict = {
     ("Код ранее перевозимого груза",): "previously_transported_cargo_code",
     ("Код станц назн РФ", "Код станции назначения", "Код станции назначения РФ"): "destination_station_code_of_rf",
     ("Код станц назн СНГ", "Код станции назначения СНГ"): "destination_station_code_of_cis",
-    ("Код станц отпр РФ", "Код станции отправления"): "departure_station_code_of_rf",
-    ("Код станц отпр СНГ", "Код станции отправления СНГ", "Код станции отправления РФ"):
+    ("Код станц отпр РФ", "Код станции отправления", "Код станции отправления РФ"): "departure_station_code_of_rf",
+    ("Код станц отпр СНГ", "Код станции отправления СНГ"):
         "departure_station_code_of_cis",
     ("Код eсловного типа вагона", "Код условного типа вагона", "Код ксловного типа вагона"):
         "code_of_conditional_type_of_wagon",
@@ -87,7 +87,7 @@ HEADERS_ENG: dict = {
     ("Плательщик", "Плательщик жд тарифа", "Плательщик тарифа"): "payer_of_the_railway_tariff",
     ("Подгрупа груза ОКВЭД", "Подгруппа*груза ОКВЭД"): "cargo_subgroup_okved",
     ("Подгруппа груза",): "sub_group_of_cargo",
-    ("Подрод Вагона", "Подрод вагона"): "wagon_subgenus",
+    ("Подрод Вагона", "Подрод вагона", "подрод вагона"): "wagon_subgenus",
     ("Подродвагона по ЦО28",): "wagon_subtype_according_to_co28",
     ("Подрод вагона по ЦО29", "Подродвагона по ЦО29"): "wagon_subtype_according_to_co29",
     ("Пояс дальности", "Пояс дальности по Пр 10-01", "Пояс дальности по Пр. 10-01",
@@ -164,7 +164,7 @@ LIST_OF_FLOAT_TYPE: list = [
 ]
 LIST_OF_INT_TYPE: list = [
     "wagon_kilometers",
-    "tara_weight_of_an_empty",
+    "tara_weight_of_an_empty_wagon",
     "cargo_class",
     "rolling_stock_code",
     "quantity_of_wagons",
