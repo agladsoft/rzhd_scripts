@@ -8,7 +8,7 @@ import numpy as np
 from __init__ import *
 from typing import Generator
 from datetime import datetime, timedelta
-from pandas import DataFrame, read_csv, read_excel
+from pandas import DataFrame, read_excel, ExcelFile
 
 
 class RZHD(object):
@@ -83,21 +83,20 @@ class RZHD(object):
             return self.convert_xlsx_datetime_to_date(float(date))
         return date
 
-    def convert_csv_to_dict(self, xlsb) -> list:
+    def convert_csv_to_dict(self, sheet: str) -> list:
         """
         Csv data representation in json.
         """
-        if xlsb:
-            df: DataFrame = read_excel(self.filename, sheet_name=0, engine=xlsb, dtype=str)
-        else:
-            df: DataFrame = read_csv(self.filename, low_memory=False, dtype=str)
-        df.replace({np.NAN: None}, inplace=True)
-        df = df.dropna(axis=0, how='all')
-        df = df.dropna(axis=1, how='all')
-        for column in LIST_SPLIT_MONTH:
-            df[column.replace("month", "year")] = None
-        self.rename_columns(df)
-        return df.to_dict('records')
+        for format_file, engine in DICT_FORMAT_AND_ENGINE.items():
+            if format_file in self.filename:
+                df: DataFrame = read_excel(self.filename, sheet_name=sheet, engine=engine, dtype=str)
+                df.replace({np.NAN: None}, inplace=True)
+                df = df.dropna(axis=0, how='all')
+                df = df.dropna(axis=1, how='all')
+                for column in LIST_SPLIT_MONTH:
+                    df[column.replace("month", "year")] = None
+                self.rename_columns(df)
+                return df.to_dict('records')
 
     def change_type(self, data: dict) -> None:
         """
@@ -114,27 +113,32 @@ class RZHD(object):
                 elif key in LIST_SPLIT_MONTH:
                     self.split_month_and_year(data, key, value)
 
-    def save_data_to_file(self, i: int, chunk_data: list) -> None:
+    def save_data_to_file(self, i: int, chunk_data: list, sheet: str) -> None:
         """
         Save a data to a file.
         """
         basename: str = os.path.basename(self.filename)
-        output_file_path: str = os.path.join(self.folder, f'{basename}_{i}.json')
+        output_file_path: str = os.path.join(self.folder, f'{basename}_{sheet}_{i}.json')
         with open(f"{output_file_path}", 'w', encoding='utf-8') as f:
             json.dump(chunk_data, f, ensure_ascii=False, indent=4)
 
-    def main(self, xlsb=None) -> None:
-        parsed_data: list = self.convert_csv_to_dict(xlsb)
-        original_file_index: int = 0
-        divided_parsed_data: list = list(self.divide_chunks(parsed_data, 50000))
-        for index, chunk_parsed_data in enumerate(divided_parsed_data):
-            for dict_data in chunk_parsed_data:
-                self.change_type(dict_data)
-                dict_data['original_file_name'] = os.path.basename(self.filename)
-                dict_data['original_file_parsed_on'] = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                dict_data['original_file_index'] = original_file_index
-                original_file_index += 1
-            self.save_data_to_file(index, chunk_parsed_data)
+    def main(self) -> None:
+        """
+        Parse data from Excel file. And split it by chunks.
+        """
+        xls: ExcelFile = ExcelFile(self.filename)
+        for sheet in xls.sheet_names:
+            parsed_data: list = self.convert_csv_to_dict(sheet)
+            original_file_index: int = 0
+            divided_parsed_data: list = list(self.divide_chunks(parsed_data, 50000))
+            for index, chunk_parsed_data in enumerate(divided_parsed_data):
+                for dict_data in chunk_parsed_data:
+                    self.change_type(dict_data)
+                    dict_data['original_file_name'] = os.path.basename(self.filename)
+                    dict_data['original_file_parsed_on'] = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                    dict_data['original_file_index'] = original_file_index
+                    original_file_index += 1
+                self.save_data_to_file(index, chunk_parsed_data, sheet)
 
 
 if __name__ == "__main__":

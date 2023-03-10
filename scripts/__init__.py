@@ -1,4 +1,10 @@
 
+DICT_FORMAT_AND_ENGINE = {
+    "xlsx": "openpyxl",
+    "xlsb": "pyxlsb",
+    "xls": "xlrd"
+}
+
 HEADERS_ENG: dict = {
     ("Адм станц назн СНГ", "Адм станц приб СНГ"): "administration_of_the_cis_destination_station",
     ("Адм станц отпр СНГ", "Адм станц отпр СНГ.1", "Адм станц отпр СНГ1"):
