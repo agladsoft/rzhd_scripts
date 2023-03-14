@@ -164,8 +164,6 @@ DATE_FORMATS: list = [
 
 LIST_OF_FLOAT_TYPE: list = [
     "weight",
-    "cargo_turnovertuple",
-    "discount_amount",
     "teu"
 ]
 LIST_OF_INT_TYPE: list = [
@@ -177,6 +175,8 @@ LIST_OF_INT_TYPE: list = [
     "quantity_of_containers",
     "transportation_volume_tons",
     "transportation_volume_kg",
+    "cargo_turnover",
+    "discount_amount",
     "carriage_fee",
     "tariff_distance",
     "sign_of_the_exclusive_tariff",

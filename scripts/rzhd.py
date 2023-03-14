@@ -105,11 +105,11 @@ class RZHD(object):
         for key, value in data.items():
             with contextlib.suppress(Exception):
                 if key in LIST_OF_FLOAT_TYPE:
-                    data[key] = float(value.replace(',', '.'))
+                    data[key] = float(value.replace(',', '.').replace("#", 0.0))
                 elif key in LIST_OF_DATE_TYPE:
                     data[key] = self.convert_format_date(value)
                 elif key in LIST_OF_INT_TYPE:
-                    data[key] = self.convert_to_int(value)
+                    data[key] = self.convert_to_int(value.replace("#", 0))
                 elif key in LIST_SPLIT_MONTH:
                     self.split_month_and_year(data, key, value)
 
