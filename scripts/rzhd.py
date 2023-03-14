@@ -7,7 +7,7 @@ import itertools
 import contextlib
 import numpy as np
 from __init__ import *
-from typing import Generator
+from typing import Generator, Union
 from datetime import datetime, timedelta
 from pandas import DataFrame, read_excel, ExcelFile
 
@@ -26,7 +26,7 @@ class RZHD(object):
             yield list_data[i:i + chunk]
 
     @staticmethod
-    def convert_to_float(value: str) -> float | None:
+    def convert_to_float(value: str) -> Union[float, None]:
         """
         Convert a value to integer.
         """
@@ -36,7 +36,7 @@ class RZHD(object):
             return float(re.sub(" +", "", value).replace(',', '.'))
 
     @staticmethod
-    def convert_to_int(value: str) -> int | None:
+    def convert_to_int(value: str) -> Union[int, None]:
         """
         Convert a value to integer.
         """
