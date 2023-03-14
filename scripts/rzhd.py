@@ -28,7 +28,7 @@ class RZHD(object):
     @staticmethod
     def convert_to_float(value: str) -> Union[float, None]:
         """
-        Convert a value to integer.
+        Convert a value to float.
         """
         if "#" in value:
             return None
