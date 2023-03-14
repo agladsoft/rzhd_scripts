@@ -1,3 +1,4 @@
+import re
 import os
 import sys
 import json
@@ -25,12 +26,24 @@ class RZHD(object):
             yield list_data[i:i + chunk]
 
     @staticmethod
-    def convert_to_int(int_value: str) -> int:
+    def convert_to_float(value: str) -> float | None:
         """
         Convert a value to integer.
         """
+        if "#" in value:
+            return None
         with contextlib.suppress(ValueError):
-            return int(int_value)
+            return float(re.sub(" +", "", value).replace(',', '.'))
+
+    @staticmethod
+    def convert_to_int(value: str) -> int | None:
+        """
+        Convert a value to integer.
+        """
+        if "#" in value:
+            return None
+        with contextlib.suppress(ValueError):
+            return int(value)
 
     @staticmethod
     def split_month_and_year(data: dict, key: str, value: str) -> None:
@@ -105,11 +118,11 @@ class RZHD(object):
         for key, value in data.items():
             with contextlib.suppress(Exception):
                 if key in LIST_OF_FLOAT_TYPE:
-                    data[key] = float(value.replace(',', '.').replace("#", 0.0))
+                    data[key] = self.convert_to_float(value)
                 elif key in LIST_OF_DATE_TYPE:
                     data[key] = self.convert_format_date(value)
                 elif key in LIST_OF_INT_TYPE:
-                    data[key] = self.convert_to_int(value.replace("#", 0))
+                    data[key] = self.convert_to_int(value)
                 elif key in LIST_SPLIT_MONTH:
                     self.split_month_and_year(data, key, value)
 

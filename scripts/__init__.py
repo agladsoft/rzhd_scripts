@@ -163,6 +163,7 @@ DATE_FORMATS: list = [
 ]
 
 LIST_OF_FLOAT_TYPE: list = [
+    "transportation_volume_tons",
     "weight",
     "teu"
 ]
@@ -173,7 +174,6 @@ LIST_OF_INT_TYPE: list = [
     "rolling_stock_code",
     "quantity_of_wagons",
     "quantity_of_containers",
-    "transportation_volume_tons",
     "transportation_volume_kg",
     "cargo_turnover",
     "discount_amount",
