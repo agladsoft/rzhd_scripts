@@ -71,6 +71,15 @@ class RZHD(object):
         df.rename(columns=dict_columns_eng, inplace=True)
 
     @staticmethod
+    def shift_columns(df):
+        """
+        Shift of a columns.
+        """
+        for i, r in df.iterrows():
+            if df.loc[i]["container_prefix"].isdigit():
+                df.loc[i][16:] = df.loc[i][16:].shift(1)
+
+    @staticmethod
     def convert_xlsx_datetime_to_date(xlsx_datetime: float) -> str:
         """
         Convert date to %Y-%m-%d from xlsx value.
@@ -109,9 +118,7 @@ class RZHD(object):
                 for column in LIST_SPLIT_MONTH:
                     df[column.replace("month", "year")] = None
                 self.rename_columns(df)
-                for i, r in df.iterrows():
-                    if df.loc[i]["container_prefix"].isdigit():
-                        df.loc[i][16:] = df.loc[i][16:].shift(1)
+                self.shift_columns(df)
                 return df.to_dict('records')
 
     def change_type(self, data: dict) -> None:
