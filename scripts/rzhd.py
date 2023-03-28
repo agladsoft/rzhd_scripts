@@ -107,13 +107,13 @@ class Rzhd(object):
         for format_file, engine in DICT_FORMAT_AND_ENGINE.items():
             if format_file in self.filename:
                 df: DataFrame = read_excel(self.filename, sheet_name=sheet, engine=engine, dtype=str)
+                self.rename_columns(df)
+                self.shift_columns(df)
                 df.replace({np.NAN: None}, inplace=True)
                 df = df.dropna(axis=0, how='all')
                 df = df.dropna(axis=1, how='all')
                 for column in LIST_SPLIT_MONTH:
                     df[column.replace("month", "year")] = None
-                self.rename_columns(df)
-                self.shift_columns(df)
                 return df.to_dict('records')
 
     def change_type(self, data: dict) -> None:
