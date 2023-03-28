@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from pandas import DataFrame, read_excel, ExcelFile
 
 
-class RZHD(object):
+class Rzhd(object):
     def __init__(self, filename: str, folder: str):
         self.filename: str = filename
         self.folder: str = folder
@@ -72,12 +72,7 @@ class RZHD(object):
 
     @staticmethod
     def shift_columns(df):
-        """
-        Shift of a columns.
-        """
-        for i, r in df.iterrows():
-            if df.loc[i]["container_prefix"].isdigit():
-                df.loc[i][16:] = df.loc[i][16:].shift(1)
+        pass
 
     @staticmethod
     def convert_xlsx_datetime_to_date(xlsx_datetime: float) -> str:
@@ -165,5 +160,5 @@ class RZHD(object):
 
 
 if __name__ == "__main__":
-    rzhd: RZHD = RZHD(os.path.abspath(sys.argv[1]), sys.argv[2])
+    rzhd: Rzhd = Rzhd(os.path.abspath(sys.argv[1]), sys.argv[2])
     rzhd.main()
