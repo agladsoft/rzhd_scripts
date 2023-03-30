@@ -21,15 +21,21 @@ do
   fi
 
   echo "Will convert XLS* '${file}' to JSON '${json_path}'"
-  python3 "${XL_IDP_ROOT_RZHD}/scripts/rzhd.py" "${file}" "${json_path}"
+  exit_message=$(python3 "${XL_IDP_ROOT_RZHD}/scripts/rzhd.py" "${file}" "${json_path}" 2>&1 > /dev/null)
 
-  if [ $? -eq 0 ]
-    then
-      mv "${file}" "${done_path}"
-    else
-      echo "ERROR during convertion ${file} to json!"
-      mv "${file}" "${xls_path}/error_$(basename "${file}")"
-      continue
-    fi
+  exit_code=$?
+  echo "Exit code ${exit_code}"
+  if [[ ${exit_code} == 0 ]]
+	then
+	  mv "${file}" "${done_path}"
+	else
+    for error_code in {1..6}
+    do
+      if [[ ${exit_code} == "${error_code}" ]]
+      then
+        mv "${file}" "${xls_path}/error_${exit_message}_$(basename "${file}")"
+      fi
+    done
+	fi
 
 done

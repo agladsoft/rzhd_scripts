@@ -1,9 +1,41 @@
 import os
 import sys
 from rzhd import Rzhd
+from __init__ import *
+
+
+class MyError(Exception):
+    pass
 
 
 class RzhdWeekly(Rzhd):
+
+    @staticmethod
+    def check_is_null_value(value):
+        if value is None:
+            raise MyError
+
+    def change_type(self, data: dict, index: int) -> None:
+        """
+        Change a type of data.
+        """
+        for key, value in data.items():
+            try:
+                if key in LIST_VALUE_NOT_NULL:
+                    self.check_is_null_value(value)
+                elif key in LIST_OF_FLOAT_TYPE:
+                    data[key] = self.convert_to_float(value)
+                elif key in LIST_OF_DATE_TYPE:
+                    data[key] = self.convert_format_date(value)
+                elif key in LIST_OF_INT_TYPE:
+                    data[key] = self.convert_to_int(value)
+                elif key in LIST_SPLIT_MONTH:
+                    self.split_month_and_year(data, key, value)
+            except MyError:
+                print(f"row_{index + 1}", file=sys.stderr)
+                sys.exit(1)
+            except (IndexError, ValueError, TypeError):
+                continue
 
     @staticmethod
     def shift_columns(df):

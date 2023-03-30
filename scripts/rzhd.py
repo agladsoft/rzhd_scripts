@@ -30,7 +30,7 @@ class Rzhd(object):
         """
         Convert a value to float.
         """
-        if "#" in value:
+        if value == "#" or value is None:
             return None
         with contextlib.suppress(ValueError):
             return float(re.sub(" +", "", value).replace(',', '.'))
@@ -40,7 +40,7 @@ class Rzhd(object):
         """
         Convert a value to integer.
         """
-        if "#" in value:
+        if value == "#" or value is None:
             return None
         with contextlib.suppress(ValueError):
             return int(value)
@@ -116,7 +116,7 @@ class Rzhd(object):
                     df[column.replace("month", "year")] = None
                 return df.to_dict('records')
 
-    def change_type(self, data: dict) -> None:
+    def change_type(self, data: dict, index: int) -> None:
         """
         Change a type of data.
         """
@@ -151,7 +151,7 @@ class Rzhd(object):
             divided_parsed_data: list = list(self.divide_chunks(parsed_data, 50000))
             for index, chunk_parsed_data in enumerate(divided_parsed_data):
                 for dict_data in chunk_parsed_data:
-                    self.change_type(dict_data)
+                    self.change_type(dict_data, index)
                     dict_data['original_file_name'] = os.path.basename(self.filename)
                     dict_data['original_file_parsed_on'] = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                     dict_data['original_file_index'] = original_file_index

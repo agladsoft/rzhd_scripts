@@ -198,3 +198,15 @@ LIST_SPLIT_MONTH: list = [
     "crediting_month",
     "month_of_acceptance_of_cargo_for_transportation",
 ]
+
+
+LIST_VALUE_NOT_NULL = [
+    "number_of_cargo_acceptances_for_transportation",
+    "transportation_volume_tons",
+    "quantity_of_containers",
+    "departure_day_report",
+    "quantity_of_wagons",
+    "wagon_kilometers",
+    "cargo_turnover",
+    "departure_date"
+]
