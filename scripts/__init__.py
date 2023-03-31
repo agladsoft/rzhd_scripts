@@ -167,6 +167,7 @@ LIST_OF_FLOAT_TYPE: list = [
     "weight",
     "teu"
 ]
+
 LIST_OF_INT_TYPE: list = [
     "wagon_kilometers",
     "tara_weight_of_an_empty_wagon",
@@ -182,6 +183,7 @@ LIST_OF_INT_TYPE: list = [
     "sign_of_the_exclusive_tariff",
     "number_of_cargo_acceptances_for_transportation"
 ]
+
 LIST_OF_DATE_TYPE: list = [
     "departure_date",
     "arrival_date",
@@ -193,12 +195,12 @@ LIST_OF_DATE_TYPE: list = [
     "arrival_day_report",
     "date_csm"
 ]
+
 LIST_SPLIT_MONTH: list = [
     "departure_month",
     "crediting_month",
     "month_of_acceptance_of_cargo_for_transportation",
 ]
-
 
 LIST_VALUE_NOT_NULL = [
     "number_of_cargo_acceptances_for_transportation",
