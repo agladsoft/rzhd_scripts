@@ -71,7 +71,7 @@ class Rzhd(object):
         df.rename(columns=dict_columns_eng, inplace=True)
 
     @staticmethod
-    def shift_columns(df):
+    def shift_columns(df: DataFrame):
         pass
 
     @staticmethod

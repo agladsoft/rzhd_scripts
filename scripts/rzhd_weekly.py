@@ -2,6 +2,7 @@ import os
 import sys
 from rzhd import Rzhd
 from __init__ import *
+from pandas import DataFrame
 
 
 class MyError(Exception):
@@ -11,7 +12,7 @@ class MyError(Exception):
 class RzhdWeekly(Rzhd):
 
     @staticmethod
-    def check_is_null_value(value):
+    def check_is_null_value(value: str | None) -> None:
         if value is None:
             raise MyError
 
@@ -38,7 +39,7 @@ class RzhdWeekly(Rzhd):
                 continue
 
     @staticmethod
-    def shift_columns(df):
+    def shift_columns(df: DataFrame):
         """
         Shift of a columns.
         """

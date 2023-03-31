@@ -1,5 +1,5 @@
 
-DICT_FORMAT_AND_ENGINE = {
+DICT_FORMAT_AND_ENGINE: dict = {
     "xlsx": "openpyxl",
     "xlsb": "pyxlsb",
     "xls": "xlrd"
