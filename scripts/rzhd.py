@@ -147,11 +147,11 @@ class Rzhd(object):
         xls: ExcelFile = ExcelFile(self.filename)
         for sheet in xls.sheet_names:
             parsed_data: list = self.convert_csv_to_dict(sheet)
-            original_file_index: int = 0
+            original_file_index: int = 1
             divided_parsed_data: list = list(self.divide_chunks(parsed_data, 50000))
             for index, chunk_parsed_data in enumerate(divided_parsed_data):
                 for dict_data in chunk_parsed_data:
-                    self.change_type(dict_data, index)
+                    self.change_type(dict_data, original_file_index)
                     dict_data['original_file_name'] = os.path.basename(self.filename)
                     dict_data['original_file_parsed_on'] = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                     dict_data['original_file_index'] = original_file_index
