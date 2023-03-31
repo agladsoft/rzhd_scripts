@@ -2,6 +2,7 @@ import os
 import sys
 from rzhd import Rzhd
 from __init__ import *
+from typing import Union
 from pandas import DataFrame
 
 
@@ -12,7 +13,7 @@ class MyError(Exception):
 class RzhdWeekly(Rzhd):
 
     @staticmethod
-    def check_is_null_value(value: str | None) -> None:
+    def check_is_null_value(value: Union[str, None]) -> None:
         if value is None:
             raise MyError
 
