@@ -202,7 +202,7 @@ LIST_SPLIT_MONTH: list = [
     "month_of_acceptance_of_cargo_for_transportation",
 ]
 
-LIST_VALUE_NOT_NULL = [
+LIST_VALUE_NOT_NULL: list = [
     "number_of_cargo_acceptances_for_transportation",
     "transportation_volume_tons",
     "quantity_of_containers",
