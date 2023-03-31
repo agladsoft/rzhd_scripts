@@ -25,13 +25,13 @@ class RzhdWeekly(Rzhd):
             try:
                 if key in LIST_VALUE_NOT_NULL:
                     self.check_is_null_value(value)
-                elif key in LIST_OF_FLOAT_TYPE:
+                if key in LIST_OF_FLOAT_TYPE:
                     data[key] = self.convert_to_float(value)
-                elif key in LIST_OF_DATE_TYPE:
+                if key in LIST_OF_DATE_TYPE:
                     data[key] = self.convert_format_date(value)
-                elif key in LIST_OF_INT_TYPE:
+                if key in LIST_OF_INT_TYPE:
                     data[key] = self.convert_to_int(value)
-                elif key in LIST_SPLIT_MONTH:
+                if key in LIST_SPLIT_MONTH:
                     self.split_month_and_year(data, key, value)
             except MyError:
                 print(f"row_{index + 1}", file=sys.stderr)
