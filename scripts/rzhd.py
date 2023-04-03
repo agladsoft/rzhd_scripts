@@ -71,10 +71,6 @@ class Rzhd(object):
         df.rename(columns=dict_columns_eng, inplace=True)
 
     @staticmethod
-    def shift_columns(df: DataFrame):
-        pass
-
-    @staticmethod
     def convert_xlsx_datetime_to_date(xlsx_datetime: float) -> str:
         """
         Convert date to %Y-%m-%d from xlsx value.
@@ -108,7 +104,6 @@ class Rzhd(object):
             if format_file in self.filename:
                 df: DataFrame = read_excel(self.filename, sheet_name=sheet, engine=engine, dtype=str)
                 self.rename_columns(df)
-                self.shift_columns(df)
                 df.replace({np.NAN: None}, inplace=True)
                 df = df.dropna(axis=0, how='all')
                 df = df.dropna(axis=1, how='all')
@@ -148,7 +143,7 @@ class Rzhd(object):
         for sheet in xls.sheet_names:
             parsed_data: list = self.convert_csv_to_dict(sheet)
             original_file_index: int = 1
-            divided_parsed_data: list = list(self.divide_chunks(parsed_data, 1000))
+            divided_parsed_data: list = list(self.divide_chunks(parsed_data, 50000))
             for index, chunk_parsed_data in enumerate(divided_parsed_data):
                 for dict_data in chunk_parsed_data:
                     self.change_type(dict_data, original_file_index)
