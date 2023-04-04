@@ -3,7 +3,6 @@ import sys
 from rzhd import Rzhd
 from __init__ import *
 from typing import Union
-from pandas import DataFrame
 
 
 class MyError(Exception):
