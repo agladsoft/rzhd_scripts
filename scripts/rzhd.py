@@ -143,7 +143,7 @@ class Rzhd(object):
         for sheet in xls.sheet_names:
             parsed_data: list = self.convert_csv_to_dict(sheet)
             original_file_index: int = 1
-            divided_parsed_data: list = list(self.divide_chunks(parsed_data, 10))
+            divided_parsed_data: list = list(self.divide_chunks(parsed_data, 50000))
             for chunk_parsed_data in divided_parsed_data:
                 for dict_data in chunk_parsed_data:
                     self.change_type(dict_data, original_file_index)
