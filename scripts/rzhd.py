@@ -92,7 +92,7 @@ class Rzhd(object):
         for date_format in DATE_FORMATS:
             with contextlib.suppress(ValueError):
                 return str(datetime.strptime(date, date_format).date())
-        if date.isdigit():
+        if date.isdigit() and len(date) >= 4:
             return self.convert_xlsx_datetime_to_date(float(date))
         return date
 
