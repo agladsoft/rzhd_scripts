@@ -85,7 +85,7 @@ class Rzhd(object):
         time: datetime = (temp_date + delta_days + delta_seconds)
         return time.strftime("%Y-%m-%d")
 
-    def convert_format_date(self, date: str) -> str:
+    def convert_format_date(self, date: str) -> Union[str, None]:
         """
         Convert to a date type.
         """
@@ -94,7 +94,7 @@ class Rzhd(object):
                 return str(datetime.strptime(date, date_format).date())
         if date.isdigit() and len(date) >= 4:
             return self.convert_xlsx_datetime_to_date(float(date))
-        return date
+        return None
 
     def convert_csv_to_dict(self, sheet: str) -> list:
         """
