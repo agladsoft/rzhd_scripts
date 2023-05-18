@@ -212,3 +212,8 @@ LIST_VALUE_NOT_NULL: list = [
     "cargo_turnover",
     "departure_date"
 ]
+
+LIST_OF_EMPTY_VALUES: list = [
+    "type_of_special_container",
+    "dispatch_category"
+]
