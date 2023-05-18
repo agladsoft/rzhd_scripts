@@ -32,6 +32,8 @@ class RzhdWeekly(Rzhd):
                     data[key] = self.convert_to_int(value)
                 if key in LIST_SPLIT_MONTH:
                     self.split_month_and_year(data, key, value)
+                elif key == "type_of_special_container":
+                    data[key] = value or "нет данных"
             except MyError:
                 print(f"row_{index + 1}", file=sys.stderr)
                 sys.exit(1)

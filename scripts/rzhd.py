@@ -125,6 +125,8 @@ class Rzhd(object):
                     data[key] = self.convert_to_int(value)
                 elif key in LIST_SPLIT_MONTH:
                     self.split_month_and_year(data, key, value)
+                elif key == "type_of_special_container":
+                    data[key] = value or "нет данных"
 
     def save_data_to_file(self, i: int, chunk_data: list, sheet: str) -> None:
         """
