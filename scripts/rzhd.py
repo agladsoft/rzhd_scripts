@@ -107,6 +107,7 @@ class Rzhd(object):
                 df.replace({np.NAN: None}, inplace=True)
                 df = df.dropna(axis=0, how='all')
                 df = df.dropna(axis=1, how='all')
+                df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
                 for column in LIST_SPLIT_MONTH:
                     df[column.replace("month", "year")] = None
                 return df.to_dict('records')
