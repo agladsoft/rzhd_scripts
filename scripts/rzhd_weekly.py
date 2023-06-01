@@ -1,9 +1,11 @@
 import os
 import sys
+import app_logger
 from rzhd import Rzhd
 from __init__ import *
 from typing import Union
 
+logger: app_logger = app_logger.get_logger(os.path.basename(__file__).replace(".py", ""))
 
 class MyError(Exception):
     pass
