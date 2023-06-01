@@ -5,12 +5,14 @@ import json
 import math
 import itertools
 import contextlib
+import app_logger
 import numpy as np
 from __init__ import *
 from typing import Generator, Union
 from datetime import datetime, timedelta
 from pandas import DataFrame, read_excel, ExcelFile
 
+logger: app_logger = app_logger.get_logger(os.path.basename(__file__).replace(".py", ""))
 
 class Rzhd(object):
     def __init__(self, filename: str, folder: str):
@@ -140,6 +142,7 @@ class Rzhd(object):
         """
         Parse data from Excel file. And split it by chunks.
         """
+        logger.info(f"{os.path.basename(self.filename)} has started processing")
         xls: ExcelFile = ExcelFile(self.filename)
         for sheet in xls.sheet_names:
             parsed_data: list = self.convert_csv_to_dict(sheet)
@@ -154,6 +157,7 @@ class Rzhd(object):
                     original_file_index += 1
             for index, chunk_parsed_data in enumerate(divided_parsed_data):
                 self.save_data_to_file(index, chunk_parsed_data, sheet)
+        logger.info(f"{os.path.basename(self.filename)} has finished processing")
 
 
 if __name__ == "__main__":
