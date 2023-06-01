@@ -142,7 +142,6 @@ class Rzhd(object):
         """
         Parse data from Excel file. And split it by chunks.
         """
-        logger.info(f"{os.path.basename(self.filename)} has started processing")
         xls: ExcelFile = ExcelFile(self.filename)
         for sheet in xls.sheet_names:
             parsed_data: list = self.convert_csv_to_dict(sheet)
@@ -157,9 +156,10 @@ class Rzhd(object):
                     original_file_index += 1
             for index, chunk_parsed_data in enumerate(divided_parsed_data):
                 self.save_data_to_file(index, chunk_parsed_data, sheet)
-        logger.info(f"{os.path.basename(self.filename)} has finished processing")
 
 
 if __name__ == "__main__":
+    logger.info(f"{os.path.basename(sys.argv[1])} has started processing")
     rzhd: Rzhd = Rzhd(os.path.abspath(sys.argv[1]), sys.argv[2])
     rzhd.main()
+    logger.info(f"{os.path.basename(sys.argv[1])} has finished processing")

@@ -42,5 +42,7 @@ class RzhdWeekly(Rzhd):
 
 
 if __name__ == "__main__":
+    logger.info(f"{os.path.basename(sys.argv[1])} has started processing")
     rzhd: RzhdWeekly = RzhdWeekly(os.path.abspath(sys.argv[1]), sys.argv[2])
     rzhd.main()
+    logger.info(f"{os.path.basename(sys.argv[1])} has finished processing")
