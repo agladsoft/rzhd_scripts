@@ -6,7 +6,7 @@ _dateftm: str = "%d/%B/%Y %H:%M:%S"
 
 
 def get_file_handler(name: str) -> logging.FileHandler:
-    log_dir_name: str = f"{os.environ['XL_IDP_ROOT_RZHD']}/logging"
+    log_dir_name: str = f"{os.environ.get('XL_IDP_ROOT_RZHD')}/logging"
     if not os.path.exists(log_dir_name):
         os.mkdir(log_dir_name)
     file_handler: logging.FileHandler = logging.FileHandler(f"{log_dir_name}/{name}.log")
