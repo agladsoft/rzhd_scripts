@@ -43,6 +43,11 @@ class RzhdWeekly(Rzhd):
 
 if __name__ == "__main__":
     logger.info(f"{os.path.basename(sys.argv[1])} has started processing")
-    rzhd: RzhdWeekly = RzhdWeekly(os.path.abspath(sys.argv[1]), sys.argv[2])
-    rzhd.main()
+    try:
+        rzhd: RzhdWeekly = RzhdWeekly(os.path.abspath(sys.argv[1]), sys.argv[2])
+        rzhd.main()
+    except Exception as ex:
+        logger.error(f"Unknown error. Exception is {ex}")
+        print("unknown error", file=sys.stderr)
+        sys.exit(1)
     logger.info(f"{os.path.basename(sys.argv[1])} has finished processing")
