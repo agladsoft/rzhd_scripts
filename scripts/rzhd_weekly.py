@@ -7,16 +7,20 @@ from typing import Union
 
 logger: app_logger = app_logger.get_logger(os.path.basename(__file__).replace(".py", ""))
 
+
 class MyError(Exception):
     pass
 
 
 class RzhdWeekly(Rzhd):
 
-    @staticmethod
-    def check_is_null_value(value: Union[str, None]) -> None:
+    def check_is_null_value(self, key: Union[str, None], value: Union[str, None]) -> None:
         if value is None:
             raise MyError
+        elif key in ["departure_day_report", "departure_date"]:
+            date = self.convert_format_date(value)
+            if not date:
+                raise MyError
 
     def change_type(self, data: dict, index: int) -> None:
         """
@@ -25,7 +29,7 @@ class RzhdWeekly(Rzhd):
         for key, value in data.items():
             try:
                 if key in LIST_VALUE_NOT_NULL:
-                    self.check_is_null_value(value)
+                    self.check_is_null_value(key, value)
                 if key in LIST_OF_FLOAT_TYPE:
                     data[key] = self.convert_to_float(value)
                 if key in LIST_OF_DATE_TYPE:

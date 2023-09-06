@@ -14,6 +14,7 @@ from pandas import DataFrame, read_excel, ExcelFile
 
 logger: app_logger = app_logger.get_logger(os.path.basename(__file__).replace(".py", ""))
 
+
 class Rzhd(object):
     def __init__(self, filename: str, folder: str):
         self.filename: str = filename
