@@ -166,6 +166,8 @@ if __name__ == "__main__":
         rzhd.main()
     except Exception as ex:
         logger.error(f"Unknown error. Exception is {ex}")
+        telegram(f'Ошибка при обработке файла {sys.argv[1]}. Ошибка : {ex}')
         print("unknown", file=sys.stderr)
+
         sys.exit(1)
     logger.info(f"{os.path.basename(sys.argv[1])} has finished processing")

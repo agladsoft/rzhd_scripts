@@ -1,3 +1,7 @@
+from notifiers import get_notifier
+
+TOKEN = '6557326533:AAHy6ls9LhTVTGztix8PUSK7BUSaHVEojXc'
+CHAT_ID = '-1002064780308'
 
 DICT_FORMAT_AND_ENGINE: dict = {
     "xlsx": "openpyxl",
@@ -217,3 +221,8 @@ LIST_OF_EMPTY_VALUES: list = [
     "type_of_special_container",
     "dispatch_category"
 ]
+
+
+def telegram(message):
+    teg = get_notifier('telegram')
+    teg.notify(token=TOKEN, chat_id=CHAT_ID, message=message)
