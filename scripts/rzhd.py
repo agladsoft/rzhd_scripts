@@ -35,8 +35,10 @@ class Rzhd(object):
         """
         if value == "#" or value is None:
             return None
-        with contextlib.suppress(ValueError):
+        try:
             return float(re.sub(" +", "", value).replace(',', '.'))
+        except ValueError as e:
+            raise AssertionError(f"Value is not float. Value is {value}") from e
 
     @staticmethod
     def convert_to_int(value: str) -> Union[int, None]:
@@ -45,8 +47,10 @@ class Rzhd(object):
         """
         if value == "#" or value is None:
             return None
-        with contextlib.suppress(ValueError):
+        try:
             return int(value)
+        except ValueError as e:
+            raise AssertionError(f"Value is not integer. Value is {value}") from e
 
     @staticmethod
     def split_month_and_year(data: dict, key: str, value: str) -> None:
@@ -92,6 +96,13 @@ class Rzhd(object):
         """
         Convert to a date type.
         """
+        if not re.search(
+            "^([1-9]|0[1-9]|1[0-9]|2[0-9]|3[0-1])([.\\-/])([1-9]|0[1-9]|1[0-2])([.\\-/])"
+            "([0-9][0-9]|19[0-9][0-9]|20[0-9][0-9])$|^([0-9][0-9]|19[0-9][0-9]|20[0-9][0-9])"
+            "([.\\-/])([1-9]|0[1-9]|1[0-2])([.\\-/])([1-9]|0[1-9]|1[0-9]|2[0-9]|3[0-1])+",
+            date,
+        ):
+            raise AssertionError(f"Date format is not valid. Date is {date}")
         for date_format in DATE_FORMATS:
             with contextlib.suppress(ValueError):
                 return str(datetime.strptime(date, date_format).date())
@@ -120,10 +131,10 @@ class Rzhd(object):
         Change a type of data.
         """
         for key, value in data.items():
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(ValueError, TypeError, IndexError):
                 if key in LIST_OF_FLOAT_TYPE:
                     data[key] = self.convert_to_float(value)
-                elif key in LIST_OF_DATE_TYPE:
+                elif key in LIST_OF_DATE_TYPE and value:
                     data[key] = self.convert_format_date(value)
                 elif key in LIST_OF_INT_TYPE:
                     data[key] = self.convert_to_int(value)

@@ -32,7 +32,7 @@ class RzhdWeekly(Rzhd):
                     self.check_is_null_value(key, value)
                 if key in LIST_OF_FLOAT_TYPE:
                     data[key] = self.convert_to_float(value)
-                if key in LIST_OF_DATE_TYPE:
+                if key in LIST_OF_DATE_TYPE and value:
                     data[key] = self.convert_format_date(value)
                 if key in LIST_OF_INT_TYPE:
                     data[key] = self.convert_to_int(value)
