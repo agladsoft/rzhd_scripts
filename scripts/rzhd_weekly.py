@@ -40,6 +40,7 @@ class RzhdWeekly(Rzhd):
                     self.split_month_and_year(data, key, value)
             except MyError:
                 print(f"row_{index + 1}", file=sys.stderr)
+                telegram(f'Ошибка при обработке строки {index + 1}. Файл {self.filename}')
                 sys.exit(1)
             except (IndexError, ValueError, TypeError):
                 continue
@@ -52,6 +53,7 @@ if __name__ == "__main__":
         rzhd.main()
     except Exception as ex:
         logger.error(f"Unknown error. Exception is {ex}")
+        telegram(f'Ошибка при обработке файла {sys.argv[1]}. Ошибка : {ex}')
         print("unknown", file=sys.stderr)
         sys.exit(1)
     logger.info(f"{os.path.basename(sys.argv[1])} has finished processing")
