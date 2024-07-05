@@ -1,6 +1,5 @@
 import os
 import requests
-from notifiers import get_notifier
 
 
 CHAT_ID = '-1002064780308'

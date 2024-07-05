@@ -1,5 +1,4 @@
 import re
-import os
 import sys
 import json
 import math
@@ -96,12 +95,7 @@ class Rzhd(object):
         """
         Convert to a date type.
         """
-        if not re.search(
-            "^([1-9]|0[1-9]|1[0-9]|2[0-9]|3[0-1])([.\\-/])([1-9]|0[1-9]|1[0-2])([.\\-/])"
-            "([0-9][0-9]|19[0-9][0-9]|20[0-9][0-9])$|^([0-9][0-9]|19[0-9][0-9]|20[0-9][0-9])"
-            "([.\\-/])([1-9]|0[1-9]|1[0-2])([.\\-/])([1-9]|0[1-9]|1[0-9]|2[0-9]|3[0-1])+",
-            date,
-        ):
+        if not re.findall(r"\d", date):
             raise AssertionError(f"Date format is not valid. Date is {date}")
         for date_format in DATE_FORMATS:
             with contextlib.suppress(ValueError):
