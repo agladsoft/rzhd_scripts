@@ -91,7 +91,7 @@ class Rzhd(object):
         time: datetime = (temp_date + delta_days + delta_seconds)
         return time.strftime("%Y-%m-%d")
 
-    def convert_format_date(self, date: str) -> Union[str, None]:
+    def convert_format_date(self, date: str) -> Union[str, datetime.date, None]:
         """
         Convert to a date type.
         """
@@ -99,7 +99,7 @@ class Rzhd(object):
             raise AssertionError(f"Date format is not valid. Date is {date}")
         for date_format in DATE_FORMATS:
             with contextlib.suppress(ValueError):
-                return str(datetime.strptime(date, date_format).date())
+                return datetime.strptime(date, date_format).date()
         if date.isdigit() and len(date) >= 4:
             return self.convert_xlsx_datetime_to_date(float(date))
         return None
@@ -129,7 +129,7 @@ class Rzhd(object):
                 if key in LIST_OF_FLOAT_TYPE:
                     data[key] = self.convert_to_float(value)
                 elif key in LIST_OF_DATE_TYPE and value:
-                    data[key] = self.convert_format_date(value)
+                    data[key] = str(self.convert_format_date(value))
                 elif key in LIST_OF_INT_TYPE:
                     data[key] = self.convert_to_int(value)
                 elif key in LIST_SPLIT_MONTH:

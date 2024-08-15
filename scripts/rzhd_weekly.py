@@ -17,7 +17,7 @@ class RzhdWeekly(Rzhd):
         if value is None:
             raise MyError
         elif key in ["departure_day_report", "departure_date"]:
-            date = self.convert_format_date(value)
+            date = str(self.convert_format_date(value))
             if not date:
                 raise MyError
 
@@ -32,7 +32,7 @@ class RzhdWeekly(Rzhd):
                 if key in LIST_OF_FLOAT_TYPE:
                     data[key] = self.convert_to_float(value)
                 if key in LIST_OF_DATE_TYPE and value:
-                    data[key] = self.convert_format_date(value)
+                    data[key] = str(self.convert_format_date(value))
                 if key in LIST_OF_INT_TYPE:
                     data[key] = self.convert_to_int(value)
                 if key in LIST_SPLIT_MONTH:

@@ -1,6 +1,8 @@
 import os
 import requests
+from dotenv import load_dotenv
 
+load_dotenv()
 
 CHAT_ID = '-1002064780308'
 TOPIC = '1069'
@@ -165,6 +167,7 @@ HEADERS_ENG: dict = {
 DATE_FORMATS: list = [
     "%m/%d/%y",
     "%d.%m.%Y",
+    "%Y-%m-%d",
     "%Y-%m-%d %H:%M:%S",
     "%m/%d/%Y",
     "%d%b%Y"
@@ -237,3 +240,15 @@ def telegram(message):
     params = {"chat_id": f"{chat_id}/{topic}", "text": message,
               'reply_to_message_id': message_id}  # Добавляем /2 для указания второго подканала
     response = requests.get(url, params=params)
+    return response.status_code
+
+
+def get_my_env_var(var_name: str) -> str:
+    try:
+        return os.environ[var_name]
+    except KeyError as e:
+        raise MissingEnvironmentVariable(f"{var_name} does not exist") from e
+
+
+class MissingEnvironmentVariable(Exception):
+    pass
