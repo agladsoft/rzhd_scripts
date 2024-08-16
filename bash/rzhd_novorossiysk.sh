@@ -21,7 +21,7 @@ do
   fi
 
   echo "Will convert XLS* '${file}' to JSON '${json_path}'"
-  python3 "${XL_IDP_ROOT_RZHD}/scripts/rzhd_ktk.py" "${file}" "${json_path}"
+  python3 "${XL_IDP_ROOT_RZHD}/scripts/rzhd.py" "${file}" "${json_path}"
 
   if [ $? -eq 0 ]
     then
