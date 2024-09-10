@@ -71,7 +71,7 @@ class RzhdKTK(Rzhd):
 
             for index, chunk in enumerate(divided_parsed_data):
                 for i, data in enumerate(chunk, start=1):
-                    self.change_type(data, i)
+                    self.change_type(data)
                     dep_date = self.convert_format_date(data["departure_date"])
                     if dep_date in date_and_containers.get(data["container_no"], []):
                         client.query(f"""
