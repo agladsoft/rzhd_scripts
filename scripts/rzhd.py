@@ -91,7 +91,7 @@ class Rzhd(object):
         time: datetime = (temp_date + delta_days + delta_seconds)
         return time.strftime("%Y-%m-%d")
 
-    def convert_format_date(self, date: str) -> Union[str, None]:
+    def convert_format_date(self, date: str) -> Union[str, datetime.date, None]:
         """
         Convert to a date type.
         """
@@ -99,7 +99,7 @@ class Rzhd(object):
             raise AssertionError(f"Date format is not valid. Date is {date}")
         for date_format in DATE_FORMATS:
             with contextlib.suppress(ValueError):
-                return str(datetime.strptime(date, date_format).date())
+                return datetime.strptime(date, date_format).date()
         if date.isdigit() and len(date) >= 4:
             return self.convert_xlsx_datetime_to_date(float(date))
         return None
@@ -120,7 +120,7 @@ class Rzhd(object):
                     df[column.replace("month", "year")] = None
                 return df.to_dict('records')
 
-    def change_type(self, data: dict, index: int) -> None:
+    def change_type(self, data: dict) -> None:
         """
         Change a type of data.
         """
@@ -129,7 +129,7 @@ class Rzhd(object):
                 if key in LIST_OF_FLOAT_TYPE:
                     data[key] = self.convert_to_float(value)
                 elif key in LIST_OF_DATE_TYPE and value:
-                    data[key] = self.convert_format_date(value)
+                    data[key] = str(self.convert_format_date(value))
                 elif key in LIST_OF_INT_TYPE:
                     data[key] = self.convert_to_int(value)
                 elif key in LIST_SPLIT_MONTH:
@@ -155,7 +155,7 @@ class Rzhd(object):
             divided_parsed_data: list = list(self.divide_chunks(parsed_data, 50000))
             for chunk_parsed_data in divided_parsed_data:
                 for dict_data in chunk_parsed_data:
-                    self.change_type(dict_data, original_file_index)
+                    self.change_type(dict_data)
                     dict_data['original_file_name'] = os.path.basename(self.filename)
                     dict_data['original_file_parsed_on'] = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                     dict_data['original_file_index'] = original_file_index
