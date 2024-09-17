@@ -68,10 +68,10 @@ class RzhdKTK(Rzhd):
         for sheet in xls.sheet_names:
             parsed_data = self.get_last_data_with_dupl(self.convert_csv_to_dict(sheet))
             divided_parsed_data = list(self.divide_chunks(parsed_data, 50000))
-
+            original_file_index: int = 1
             for index, chunk in enumerate(divided_parsed_data):
-                for i, data in enumerate(chunk, start=1):
-                    self.change_type(data)
+                for data in chunk:
+                    self.change_type(data, original_file_index)
                     dep_date = self.convert_format_date(data["departure_date"])
                     if dep_date in date_and_containers.get(data["container_no"], []):
                         client.query(f"""
@@ -83,8 +83,9 @@ class RzhdKTK(Rzhd):
                     data.update({
                         'original_file_name': original_file_name,
                         'original_file_parsed_on': timestamp,
-                        'original_file_index': i
+                        'original_file_index': original_file_index
                     })
+                    original_file_index += 1
 
                 self.save_data_to_file(index, chunk, sheet)
 
