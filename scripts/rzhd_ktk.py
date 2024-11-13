@@ -13,10 +13,26 @@ logger: app_logger = app_logger.get_logger(os.path.basename(__file__).replace(".
 class RzhdKTK(Rzhd):
 
     @staticmethod
+    def _get_information_default_dict(default_dict: defaultdict, name: str) -> list:
+        return [data.get(name) for data in default_dict]
+
+    def find_date_and_name_of_cargo(self, data: dict, deep_data: defaultdict, deep_date: datetime) -> bool:
+        departure_date = self._get_information_default_dict(deep_data[data['container_no']], 'departure_date')
+        name_of_cargo = self._get_information_default_dict(deep_data[data['container_no']], 'name_of_cargo')
+        if deep_date in departure_date and data.get('name_of_cargo') in name_of_cargo:
+            return True
+        return False
+
+    @staticmethod
+    def change_name_of_cargo(data: dict):
+        if not data.get('name_of_cargo'):
+            data['name_of_cargo'] = 'Пустой'
+
+    @staticmethod
     def get_dict_containers(rzhd_query):
         default_d = defaultdict(list)
         for row in rzhd_query.result_rows:
-            default_d[row[0]].append(row[1])
+            default_d[row[0]].append({'departure_date': row[1], 'name_of_cargo': row[2]})
         logger.info("Dictionary is filled with containers")
         return default_d
 
@@ -30,7 +46,7 @@ class RzhdKTK(Rzhd):
                                 username=get_my_env_var('USERNAME_DB'), password=get_my_env_var('PASSWORD'))
             logger.info("Successfully connect to db")
             rzhd_query = client.query(
-                "SELECT container_no, departure_date FROM rzhd_ktk GROUP BY container_no, departure_date"
+                "SELECT container_no, departure_date, name_of_cargo FROM rzhd_ktk GROUP BY container_no, departure_date, name_of_cargo"
             )
             # Чтобы проверить, есть ли данные. Так как переменная образуется, но внутри нее могут быть ошибки.
             print(rzhd_query.result_rows[0])
@@ -72,13 +88,15 @@ class RzhdKTK(Rzhd):
             for index, chunk in enumerate(divided_parsed_data):
                 for data in chunk:
                     self.change_type(data, original_file_index)
+                    self.change_name_of_cargo(data)
                     dep_date = self.convert_format_date(data["departure_date"])
-                    if dep_date in date_and_containers.get(data["container_no"], []):
+                    if self.find_date_and_name_of_cargo(data, date_and_containers, dep_date):
                         client.query(f"""
-                            ALTER TABLE rzhd.rzhd_ktk 
-                            UPDATE is_obsolete=true 
-                            WHERE departure_date = '{data['departure_date']}' 
+                            ALTER TABLE rzhd.rzhd_ktk
+                            UPDATE is_obsolete=true
+                            WHERE departure_date = '{data['departure_date']}'
                             AND container_no = '{data['container_no']}'
+                            AND name_of_cargo = '{data['name_of_cargo']}'
                         """)
                     data.update({
                         'original_file_name': original_file_name,
