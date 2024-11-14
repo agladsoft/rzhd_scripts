@@ -104,7 +104,7 @@ class Rzhd(object):
             return self.convert_xlsx_datetime_to_date(float(date))
         return None
 
-    def convert_csv_to_dict(self, sheet: str) -> list:
+    def convert_csv_to_dict(self, sheet: str, references: tuple) -> list:
         """
         Csv data representation in json.
         """
@@ -150,7 +150,7 @@ class Rzhd(object):
         """
         xls: ExcelFile = ExcelFile(self.filename)
         for sheet in xls.sheet_names:
-            parsed_data: list = self.convert_csv_to_dict(sheet)
+            parsed_data: list = self.convert_csv_to_dict(sheet, ())
             original_file_index: int = 1
             divided_parsed_data: list = list(self.divide_chunks(parsed_data, 50000))
             for chunk_parsed_data in divided_parsed_data:
