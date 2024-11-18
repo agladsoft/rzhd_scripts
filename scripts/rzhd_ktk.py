@@ -203,7 +203,7 @@ class RzhdKTK(Rzhd):
                     left_on='payer_of_the_railway_tariff',
                     right_on='company_name'
                 )
-                df.replace({np.NAN: None}, inplace=True)
+                df.replace({np.nan: None, "NaT": None}, inplace=True)
                 df = df.dropna(axis=0, how='all')
                 df = df.dropna(axis=1, how='all')
                 df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
