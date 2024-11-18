@@ -192,7 +192,8 @@ LIST_OF_INT_TYPE: list = [
     "carriage_fee",
     "tariff_distance",
     "sign_of_the_exclusive_tariff",
-    "number_of_cargo_acceptances_for_transportation"
+    "number_of_cargo_acceptances_for_transportation",
+    "container_tonnage_unified"
 ]
 
 LIST_OF_DATE_TYPE: list = [
