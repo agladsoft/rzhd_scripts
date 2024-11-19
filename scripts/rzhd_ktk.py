@@ -29,47 +29,6 @@ class RzhdKTK(Rzhd):
 
     @staticmethod
     def replace_organization_form(payer_of_the_railway_tariff):
-        # replacements = [
-        #     (r'ИНДИВИДУАЛЬНЫЙ ПРЕДПРИНИМАТЕЛЬ', 'ИП '),
-        #     (r'ОБОСОБЛЕННОЕ ПОДРАЗДЕЛЕНИЕ ОБЩЕСТВА С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ', 'ОП ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБШЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЦЕННОЙ ОТВЕТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕНННОЙ ОТВЕТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕНТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕНННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТСЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ТВЕТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕННОЙОТВЕТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕНОЙ ОТВЕТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОЛГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОРГАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВА С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧННОЙ ОТВЕТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТСВЕННОСТЬЮ', 'ООО '),
-        #     (r'ТОВАРИЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ', 'ООО '),
-        #     (r'ОБЩЕСТВО С ОГРАНИЧЕННОЙ', 'ООО '),
-        #     (r'НЕПУБЛИЧНОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО', 'НАО '),
-        #     (r'ПУБЛИЧНОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО ЦЕНТР ПО ПЕРЕВОЗКЕ ГРУЗОВ В КОНТЕЙНЕРА', 'ПАО ТРАНСКОНТЕЙНЕР'),
-        #     (r'ПУБЛИЧНОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО', 'ПАО '),
-        #     (r'ПУБЛИЧНОГО АКЦИОНЕРНОГО ОБЩЕСТВА', 'ПАО '),
-        #     (r'ОТКРЫТОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО', 'ОАО '),
-        #     (r'ЗАКРЫТОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО', 'ЗАО '),
-        #     (r'ТОВАРИЩЕНСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ', 'ТОО '),
-        #     (r'АКЦИОНЕРНОЕ ОБЩЕСТВО', 'АО '),
-        #     (r'АКЦИОНЕРНОГО ОБЩЕСТВА', 'АО '),
-        #     (r'АКЦИОНЕРНАЯ КОМПАНИЯ', 'АК '),
-        #     (r'ФЕДЕРАЛЬНОЕ АГЕНТСТВО', 'ФА '),
-        #     (r'ООО', 'ООО '),
-        #     (r'ОАО', 'ОАО ')
-        # ]
-
         replacements = [
             (r'ИНДИВИДУАЛЬНЫЙ ПРЕДПРИНИМАТЕЛЬ', 'ИП '),
             (r'ОБОСОБЛЕННОЕ ПОДРАЗДЕЛЕНИЕ', 'ОП '),
@@ -104,6 +63,8 @@ class RzhdKTK(Rzhd):
             payer_of_the_railway_tariff = self.replace_organization_form(payer_of_the_railway_tariff)
             payer_of_the_railway_tariff = re.sub(r' +', ' ', payer_of_the_railway_tariff)
             data['payer_of_the_railway_tariff'] = payer_of_the_railway_tariff
+        if not data.get('payer_of_the_railway_tariff_unified'):
+            data['payer_of_the_railway_tariff_unified'] = data['payer_of_the_railway_tariff']
 
     @staticmethod
     def get_dict_containers(rzhd_query):
@@ -135,11 +96,21 @@ class RzhdKTK(Rzhd):
         reference_container_type = self.query_to_dataframe(client, reference_container_type_query)
         reference_replace_company_name = self.query_to_dataframe(client, reference_replace_company_name_query)
 
+        reference_replace_company_name.rename(
+            columns={
+                "company_name": "payer_of_the_railway_tariff",
+                "company_name_unified": "payer_of_the_railway_tariff_unified"
+            },
+            inplace=True
+        )
+
+        reference_tonnage.set_index('container_tonnage', inplace=True)
+        reference_container_type.set_index('type_of_special_container', inplace=True)
+        reference_replace_company_name.set_index('payer_of_the_railway_tariff', inplace=True)
+
         return reference_tonnage, \
             reference_container_type, \
-            reference_replace_company_name.rename(
-                columns={"company_name_unified": "payer_of_the_railway_tariff_unified"}
-            )
+            reference_replace_company_name
 
     def connect_to_db(self):
         """
@@ -185,31 +156,24 @@ class RzhdKTK(Rzhd):
         """
         for format_file, engine in DICT_FORMAT_AND_ENGINE.items():
             if format_file in self.filename:
+                logger.info(f"Starting to read Excel file: {self.filename}, sheet: {sheet}")
                 df: DataFrame = read_excel(self.filename, sheet_name=sheet, engine=engine, dtype=str)
+                logger.info(f"Ending to read Excel file: {self.filename}, sheet: {sheet}")
                 self.rename_columns(df)
-                df = df.merge(
-                    references[0],
-                    how='left',
-                    left_on='container_tonnage',
-                    right_on='container_tonnage'
-                ).merge(
-                    references[1],
-                    how='left',
-                    left_on='type_of_special_container',
-                    right_on='type_of_special_container'
-                ).merge(
-                    references[2],
-                    how='left',
-                    left_on='payer_of_the_railway_tariff',
-                    right_on='company_name'
+                df.set_index(
+                    ['container_tonnage', 'type_of_special_container', 'payer_of_the_railway_tariff'],
+                    inplace=True
                 )
+                logger.info(f"Starting to join Excel file: {self.filename}, sheet: {sheet}")
+                df = df.join(references[0]).join(references[1]).join(references[2])
+                logger.info(f"Ending to join Excel file: {self.filename}, sheet: {sheet}")
                 df.replace({np.nan: None, "NaT": None}, inplace=True)
                 df = df.dropna(axis=0, how='all')
                 df = df.dropna(axis=1, how='all')
                 df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
                 for column in LIST_SPLIT_MONTH:
                     df[column.replace("month", "year")] = None
-                return df.to_dict('records')
+                return df.reset_index().to_dict('records')
 
     def main(self) -> None:
         """
