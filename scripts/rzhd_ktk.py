@@ -58,7 +58,7 @@ class RzhdKTK(Rzhd):
             data['name_of_cargo'] = 'Пустой'
         if data.get('payer_of_the_railway_tariff'):
             payer_of_the_railway_tariff = re.sub(
-                r'[",()?«».\']', '', data['payer_of_the_railway_tariff'].upper()
+                r'[",()?«».\']', '', str(data['payer_of_the_railway_tariff']).upper()
             ).strip()
             payer_of_the_railway_tariff = self.replace_organization_form(payer_of_the_railway_tariff)
             payer_of_the_railway_tariff = re.sub(r' +', ' ', payer_of_the_railway_tariff)
