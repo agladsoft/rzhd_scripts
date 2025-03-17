@@ -1,10 +1,8 @@
 import sys
-import app_logger
-from rzhd import Rzhd
-from __init__ import *
+from src.scripts.app_logger import logger
+from src.scripts.rzhd import Rzhd
+from src.scripts.__init__ import *
 from typing import Union
-
-logger: app_logger = app_logger.get_logger(os.path.basename(__file__).replace(".py", ""))
 
 
 class MyError(Exception):

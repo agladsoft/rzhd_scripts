@@ -4,14 +4,12 @@ import json
 import math
 import itertools
 import contextlib
-import app_logger
+from src.scripts.app_logger import logger
 import numpy as np
-from __init__ import *
+from src.scripts.__init__ import *
 from typing import Generator, Union
 from datetime import datetime, timedelta
 from pandas import DataFrame, read_excel, ExcelFile
-
-logger: app_logger = app_logger.get_logger(os.path.basename(__file__).replace(".py", ""))
 
 
 class Rzhd(object):

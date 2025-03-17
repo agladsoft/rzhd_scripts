@@ -1,16 +1,14 @@
 import re
 import sys
-import app_logger
+from src.scripts.app_logger import logger
 import numpy as np
 import pandas as pd
-from rzhd import Rzhd
-from __init__ import *
+from src.scripts.rzhd import Rzhd
+from src.scripts.__init__ import *
 from datetime import datetime
 from collections import defaultdict
 from clickhouse_connect import get_client
 from pandas import ExcelFile, DataFrame, read_excel
-
-logger: app_logger = app_logger.get_logger(os.path.basename(__file__).replace(".py", ""))
 
 
 class RzhdKTK(Rzhd):
@@ -23,8 +21,8 @@ class RzhdKTK(Rzhd):
         departure_date = self._get_information_default_dict(deep_data[data['container_no']], 'departure_date')
         name_of_cargo = self._get_information_default_dict(deep_data[data['container_no']], 'name_of_cargo')
         return (
-            deep_date in departure_date
-            and data.get('name_of_cargo') in name_of_cargo
+                deep_date in departure_date
+                and data.get('name_of_cargo') in name_of_cargo
         )
 
     @staticmethod

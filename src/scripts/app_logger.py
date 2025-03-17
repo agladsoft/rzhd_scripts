@@ -22,3 +22,6 @@ def get_logger(name: str) -> logging.getLogger:
     logger.setLevel(logging.INFO)
     logger.addHandler(get_file_handler(name))
     return logger
+
+
+logger = get_logger(os.path.basename(__file__).replace(".py", ""))
