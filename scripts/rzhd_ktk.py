@@ -142,7 +142,7 @@ class RzhdKTK(Rzhd):
         """
         seen = {}
         for i, dict_data in enumerate(parsed_data):
-            key = (dict_data["container_no"], dict_data["departure_date"])
+            key = (dict_data["container_no"], dict_data["departure_date"], dict_data["name_of_cargo"])
             if key in seen:
                 parsed_data[seen[key]]["is_obsolete"] = True
             else:
