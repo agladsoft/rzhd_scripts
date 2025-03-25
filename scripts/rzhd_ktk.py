@@ -1,16 +1,18 @@
 import re
 import sys
+import time
 import app_logger
 import numpy as np
 import pandas as pd
 from rzhd import Rzhd
 from __init__ import *
 from datetime import datetime
+from typing import Optional, List
 from collections import defaultdict
 from clickhouse_connect import get_client
 from pandas import ExcelFile, DataFrame, read_excel
 
-logger: app_logger = app_logger.get_logger(os.path.basename(__file__).replace(".py", ""))
+logger: app_logger = app_logger.get_logger(f'{os.path.basename(__file__).replace(".py", "")}')
 
 
 class RzhdKTK(Rzhd):
@@ -121,14 +123,14 @@ class RzhdKTK(Rzhd):
             client = get_client(host=get_my_env_var('HOST'), database=get_my_env_var('DATABASE'),
                                 username=get_my_env_var('USERNAME_DB'), password=get_my_env_var('PASSWORD'))
             logger.info("Successfully connect to db")
-            rzhd_query = client.query(
-                "SELECT container_no, departure_date, name_of_cargo "
-                "FROM rzhd_ktk "
-                "GROUP BY container_no, departure_date, name_of_cargo"
-            )
-            # Чтобы проверить, есть ли данные. Так как переменная образуется, но внутри нее могут быть ошибки.
-            print(rzhd_query.result_rows[0])
-            return self.get_dict_containers(rzhd_query), client
+            # rzhd_query = client.query(
+            #     "SELECT container_no, departure_date, name_of_cargo "
+            #     "FROM rzhd_ktk "
+            #     "GROUP BY container_no, departure_date, name_of_cargo"
+            # )
+            # # Чтобы проверить, есть ли данные. Так как переменная образуется, но внутри нее могут быть ошибки.
+            # print(rzhd_query.result_rows[0])
+            return None, client
         except Exception as ex_connect:
             logger.error(f"Error connection to db {ex_connect}. Type error is {type(ex_connect)}.")
             print("error_connect_db", file=sys.stderr)
@@ -136,7 +138,7 @@ class RzhdKTK(Rzhd):
             sys.exit(1)
 
     @staticmethod
-    def get_last_data_with_dupl(parsed_data: list) -> list:
+    def get_last_data_with_dupl(parsed_data: List[dict]) -> list:
         """
         Mark rows as obsolete if there's a duplicate of 'container_no' and 'departure_date'.
         """
@@ -150,7 +152,7 @@ class RzhdKTK(Rzhd):
             dict_data["is_obsolete"] = False
         return parsed_data
 
-    def convert_csv_to_dict(self, sheet: str, references: tuple) -> list:
+    def convert_csv_to_dict(self, sheet: str, references: tuple) -> Optional[list]:
         """
         Csv data representation in json.
         """
@@ -174,6 +176,8 @@ class RzhdKTK(Rzhd):
                 for column in LIST_SPLIT_MONTH:
                     df[column.replace("month", "year")] = None
                 return df.reset_index().to_dict('records')
+            return None
+        return None
 
     def main(self) -> None:
         """
@@ -184,33 +188,38 @@ class RzhdKTK(Rzhd):
         xls = ExcelFile(self.filename)
         original_file_name = os.path.basename(self.filename)
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        start_time = time.time()
+        original_file_count = 0
 
         for sheet in xls.sheet_names:
             parsed_data = self.get_last_data_with_dupl(self.convert_csv_to_dict(sheet, references))
             divided_parsed_data = list(self.divide_chunks(parsed_data, 50000))
             original_file_index: int = 1
+            original_file_count += len(parsed_data)
             for index, chunk in enumerate(divided_parsed_data):
                 for data in chunk:
                     self.change_type(data, original_file_index)
                     self.change_value(data)
                     dep_date = self.convert_format_date(data["departure_date"])
-                    if self.find_date_and_name_of_cargo(data, date_and_containers, dep_date):
-                        client.query(f"""
-                            ALTER TABLE rzhd.rzhd_ktk
-                            UPDATE is_obsolete=true
-                            WHERE departure_date = '{data['departure_date']}'
-                            AND container_no = '{data['container_no']}'
-                            AND name_of_cargo = '{data['name_of_cargo']}'
-                        """)
+                    # if self.find_date_and_name_of_cargo(data, date_and_containers, dep_date):
+                    #     client.query(f"""
+                    #         ALTER TABLE rzhd.rzhd_ktk
+                    #         UPDATE is_obsolete=true
+                    #         WHERE departure_date = '{data['departure_date']}'
+                    #         AND container_no = '{data['container_no']}'
+                    #         AND name_of_cargo = '{data['name_of_cargo']}'
+                    #     """)
                     data.update({
                         'original_file_name': original_file_name,
                         'original_file_parsed_on': timestamp,
                         'original_file_index': original_file_index
                     })
                     original_file_index += 1
+                    self.send_metrics(start_time, original_file_name, original_file_index, router="real-time-stats")
 
                 self.save_data_to_file(index, chunk, sheet)
 
+        self.send_metrics(start_time, original_file_name, original_file_count, router="track-file")
 
 if __name__ == "__main__":
     logger.info(f"{os.path.basename(sys.argv[1])} has started processing")

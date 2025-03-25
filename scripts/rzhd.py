@@ -1,5 +1,6 @@
 import re
 import sys
+import time
 import json
 import math
 import itertools
@@ -11,7 +12,7 @@ from typing import Generator, Union
 from datetime import datetime, timedelta
 from pandas import DataFrame, read_excel, ExcelFile
 
-logger: app_logger = app_logger.get_logger(os.path.basename(__file__).replace(".py", ""))
+logger: app_logger = app_logger.get_logger(str(os.path.basename(__file__).replace(".py", "")))
 
 
 class Rzhd(object):
@@ -88,8 +89,8 @@ class Rzhd(object):
         delta_days: timedelta = timedelta(days=days)
         secs: int = int(24 * 60 * 60 * portion)
         delta_seconds: timedelta = timedelta(seconds=secs)
-        time: datetime = (temp_date + delta_days + delta_seconds)
-        return time.strftime("%Y-%m-%d")
+        time_: datetime = (temp_date + delta_days + delta_seconds)
+        return time_.strftime("%Y-%m-%d")
 
     def convert_format_date(self, date: str) -> Union[str, datetime.date, None]:
         """
@@ -99,7 +100,7 @@ class Rzhd(object):
             raise AssertionError(f"Date format is not valid. Date is {date}")
         for date_format in DATE_FORMATS:
             with contextlib.suppress(ValueError):
-                return datetime.strptime(date, date_format).date()
+                return str(datetime.strptime(date, date_format).date())
         if date.isdigit() and len(date) >= 4:
             return self.convert_xlsx_datetime_to_date(float(date))
         return None
@@ -119,6 +120,8 @@ class Rzhd(object):
                 for column in LIST_SPLIT_MONTH:
                     df[column.replace("month", "year")] = None
                 return df.to_dict('records')
+            return []
+        return []
 
     def change_type(self, data: dict, index: int) -> None:
         """
@@ -129,7 +132,7 @@ class Rzhd(object):
                 if key in LIST_OF_FLOAT_TYPE:
                     data[key] = self.convert_to_float(value)
                 elif key in LIST_OF_DATE_TYPE and value:
-                    data[key] = str(self.convert_format_date(value))
+                    data[key] = self.convert_format_date(value)
                 elif key in LIST_OF_INT_TYPE:
                     data[key] = self.convert_to_int(value)
                 elif key in LIST_SPLIT_MONTH:
@@ -144,24 +147,48 @@ class Rzhd(object):
         with open(f"{output_file_path}", 'w', encoding='utf-8') as f:
             json.dump(chunk_data, f, ensure_ascii=False, indent=4)
 
+    @staticmethod
+    def send_metrics(start_time: time, original_file_name: str, original_file_index: int, router: str) -> None:
+        """
+        Send metrics using GET request
+        """
+        try:
+            processing_time: time = time.time() - start_time
+            params: dict = {
+                "script_name": "rzhd",
+                "file_name": original_file_name,
+                "rows": original_file_index,
+                "processing_time": processing_time
+            }
+            response: requests.Response = requests.post(f"http://84.201.143.187:8090/{router}/", json=params)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to send metrics: {e}")
+
     def main(self) -> None:
         """
         Parse data from Excel file. And split it by chunks.
         """
+        original_file_count: int = 0
+        start_time: time = time.time()
         xls: ExcelFile = ExcelFile(self.filename)
+        original_file_name: str = os.path.basename(self.filename)
         for sheet in xls.sheet_names:
             parsed_data: list = self.convert_csv_to_dict(sheet, ())
             original_file_index: int = 1
+            original_file_count += len(parsed_data)
             divided_parsed_data: list = list(self.divide_chunks(parsed_data, 50000))
             for chunk_parsed_data in divided_parsed_data:
                 for dict_data in chunk_parsed_data:
                     self.change_type(dict_data, original_file_index)
-                    dict_data['original_file_name'] = os.path.basename(self.filename)
+                    dict_data['original_file_name'] = original_file_name
                     dict_data['original_file_parsed_on'] = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                     dict_data['original_file_index'] = original_file_index
                     original_file_index += 1
+                    self.send_metrics(start_time, original_file_name, original_file_index, router="real-time-stats")
             for index, chunk_parsed_data in enumerate(divided_parsed_data):
                 self.save_data_to_file(index, chunk_parsed_data, sheet)
+        self.send_metrics(start_time, original_file_name, original_file_count, router="track-file")
 
 
 if __name__ == "__main__":
