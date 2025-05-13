@@ -166,14 +166,16 @@ class RzhdKTK(Rzhd):
                     inplace=True
                 )
                 logger.info(f"Starting to join Excel file: {self.filename}, sheet: {sheet}")
-                df = df.join(references[0]).join(references[1]).join(references[2])
+                df = df.join(references[0]).fillna(None)
+                df = df.join(references[1]).fillna(None)
+                df = df.join(references[2]).fillna(None)
                 logger.info(f"Ending to join Excel file: {self.filename}, sheet: {sheet}")
                 df = df.dropna(axis=0, how='all')
                 df = df.dropna(axis=1, how='all')
                 df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
                 for column in LIST_SPLIT_MONTH:
                     df[column.replace("month", "year")] = None
-                df.replace({np.nan: None, np.NAN: None, np.NaN: None, "NaT": None}, inplace=True)
+                df.replace({np.nan: None, np.NAN: None, np.NaN: None, "NaT": None, "NaN": None}, inplace=True)
                 return df.reset_index().to_dict('records')
             return []
         return []
