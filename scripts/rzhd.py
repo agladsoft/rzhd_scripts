@@ -112,12 +112,12 @@ class Rzhd(object):
             if format_file in self.filename:
                 df: DataFrame = read_excel(self.filename, sheet_name=sheet, engine=engine, dtype=str)
                 self.rename_columns(df)
-                df.replace({np.nan: None, np.NAN: None, np.NaN: None, "NaT": None}, inplace=True)
                 df = df.dropna(axis=0, how='all')
                 df = df.dropna(axis=1, how='all')
                 df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
                 for column in LIST_SPLIT_MONTH:
                     df[column.replace("month", "year")] = None
+                df.replace({np.nan: None, np.NAN: None, np.NaN: None, "NaT": None}, inplace=True)
                 return df.to_dict('records')
             return []
         return []
