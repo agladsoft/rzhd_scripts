@@ -173,7 +173,8 @@ class RzhdKTK(Rzhd):
                 df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
                 for column in LIST_SPLIT_MONTH:
                     df[column.replace("month", "year")] = None
-                df.replace({np.nan: None, np.NAN: None, np.NaN: None, "NaT": None, "NaN": None}, inplace=True)
+                df.replace({np.nan: None, np.NAN: None, np.NaN: None, "NaT": None, "NAN": None}, inplace=True)
+                df = df.where(pd.notnull(df), None)
                 return df.reset_index().to_dict('records')
             return []
         return []
