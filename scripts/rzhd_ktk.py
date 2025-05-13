@@ -151,6 +151,14 @@ class RzhdKTK(Rzhd):
             dict_data["is_obsolete"] = False
         return parsed_data
 
+    @staticmethod
+    def change_nan(result: List[dict]):
+        for record in result:
+            for key, value in record.items():
+                if pd.isna(value):
+                    record[key] = None
+        return result
+
     def convert_csv_to_dict(self, sheet: str, references: tuple) -> list:
         """
         Csv data representation in json.
@@ -173,9 +181,9 @@ class RzhdKTK(Rzhd):
                 df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
                 for column in LIST_SPLIT_MONTH:
                     df[column.replace("month", "year")] = None
-                df.replace({np.nan: None, np.NAN: None, np.NaN: None, "NaT": None, "NAN": None}, inplace=True)
-                df = df.where(pd.notnull(df), None)
-                return df.reset_index().to_dict('records')
+                df = df.replace({np.nan: None, pd.NA: None})
+                df = df.applymap(lambda x: None if isinstance(x, str) and x.strip().upper() in ["NAN", "NAT"] else x)
+                return self.change_nan(df.reset_index().to_dict('records'))
             return []
         return []
 
