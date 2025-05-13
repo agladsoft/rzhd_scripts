@@ -11,7 +11,7 @@ from typing import Generator, Union
 from datetime import datetime, timedelta
 from pandas import DataFrame, read_excel, ExcelFile
 
-logger: app_logger = app_logger.get_logger(os.path.basename(__file__).replace(".py", ""))
+logger: app_logger = app_logger.get_logger(str(os.path.basename(__file__).replace(".py", "")))
 
 
 class Rzhd(object):
@@ -112,13 +112,15 @@ class Rzhd(object):
             if format_file in self.filename:
                 df: DataFrame = read_excel(self.filename, sheet_name=sheet, engine=engine, dtype=str)
                 self.rename_columns(df)
-                df.replace({np.NAN: None}, inplace=True)
+                df.replace({np.nan: None, np.NAN: None, np.NaN: None, "NaT": None}, inplace=True)
                 df = df.dropna(axis=0, how='all')
                 df = df.dropna(axis=1, how='all')
                 df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
                 for column in LIST_SPLIT_MONTH:
                     df[column.replace("month", "year")] = None
                 return df.to_dict('records')
+            return []
+        return []
 
     def change_type(self, data: dict, index: int) -> None:
         """

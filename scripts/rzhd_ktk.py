@@ -5,12 +5,13 @@ import numpy as np
 import pandas as pd
 from rzhd import Rzhd
 from __init__ import *
+from typing import List
 from datetime import datetime
 from collections import defaultdict
 from clickhouse_connect import get_client
 from pandas import ExcelFile, DataFrame, read_excel
 
-logger: app_logger = app_logger.get_logger(os.path.basename(__file__).replace(".py", ""))
+logger: app_logger = app_logger.get_logger(str(os.path.basename(__file__).replace(".py", "")))
 
 
 class RzhdKTK(Rzhd):
@@ -136,7 +137,7 @@ class RzhdKTK(Rzhd):
             sys.exit(1)
 
     @staticmethod
-    def get_last_data_with_dupl(parsed_data: list) -> list:
+    def get_last_data_with_dupl(parsed_data: List[dict]) -> list:
         """
         Mark rows as obsolete if there's a duplicate of 'container_no' and 'departure_date'.
         """
@@ -167,13 +168,15 @@ class RzhdKTK(Rzhd):
                 logger.info(f"Starting to join Excel file: {self.filename}, sheet: {sheet}")
                 df = df.join(references[0]).join(references[1]).join(references[2])
                 logger.info(f"Ending to join Excel file: {self.filename}, sheet: {sheet}")
-                df.replace({np.nan: None, "NaT": None}, inplace=True)
+                df.replace({np.nan: None, np.NAN: None, np.NaN: None, "NaT": None}, inplace=True)
                 df = df.dropna(axis=0, how='all')
                 df = df.dropna(axis=1, how='all')
                 df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
                 for column in LIST_SPLIT_MONTH:
                     df[column.replace("month", "year")] = None
                 return df.reset_index().to_dict('records')
+            return []
+        return []
 
     def main(self) -> None:
         """
