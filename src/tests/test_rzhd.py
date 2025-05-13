@@ -8,7 +8,6 @@ sys.modules['src.scripts.app_logger'] = MagicMock()
 from src.scripts.rzhd import Rzhd
 from datetime import datetime, timedelta
 
-sys.modules['src.scripts.app_logger'] = MagicMock()
 os.environ['XL_IDP_ROOT_RZHD'] = '/tmp'
 
 HEADERS_ENG = {("Колонка1", "КЛ1"): "column1_eng"}
