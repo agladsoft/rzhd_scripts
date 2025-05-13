@@ -122,14 +122,14 @@ class RzhdKTK(Rzhd):
             client = get_client(host=get_my_env_var('HOST'), database=get_my_env_var('DATABASE'),
                                 username=get_my_env_var('USERNAME_DB'), password=get_my_env_var('PASSWORD'))
             logger.info("Successfully connect to db")
-            rzhd_query = client.query(
-                "SELECT container_no, departure_date, name_of_cargo "
-                "FROM rzhd_ktk "
-                "GROUP BY container_no, departure_date, name_of_cargo"
-            )
-            # Чтобы проверить, есть ли данные. Так как переменная образуется, но внутри нее могут быть ошибки.
-            print(rzhd_query.result_rows[0])
-            return self.get_dict_containers(rzhd_query), client
+            # rzhd_query = client.query(
+            #     "SELECT container_no, departure_date, name_of_cargo "
+            #     "FROM rzhd_ktk "
+            #     "GROUP BY container_no, departure_date, name_of_cargo"
+            # )
+            # # Чтобы проверить, есть ли данные. Так как переменная образуется, но внутри нее могут быть ошибки.
+            # print(rzhd_query.result_rows[0])
+            return client
         except Exception as ex_connect:
             logger.error(f"Error connection to db {ex_connect}. Type error is {type(ex_connect)}.")
             print("error_connect_db", file=sys.stderr)
@@ -166,9 +166,7 @@ class RzhdKTK(Rzhd):
                     inplace=True
                 )
                 logger.info(f"Starting to join Excel file: {self.filename}, sheet: {sheet}")
-                df = df.join(references[0]).fillna(None)
-                df = df.join(references[1]).fillna(None)
-                df = df.join(references[2]).fillna(None)
+                df = df.join(references[0]).join(references[1]).join(references[2])
                 logger.info(f"Ending to join Excel file: {self.filename}, sheet: {sheet}")
                 df = df.dropna(axis=0, how='all')
                 df = df.dropna(axis=1, how='all')
@@ -184,7 +182,7 @@ class RzhdKTK(Rzhd):
         """
         Parse data from Excel file and split it by chunks.
         """
-        date_and_containers, client = self.connect_to_db()
+        client = self.connect_to_db()
         references = self.get_reference(client)
         xls = ExcelFile(self.filename)
         original_file_name = os.path.basename(self.filename)
