@@ -230,6 +230,10 @@ LIST_OF_EMPTY_VALUES: list = [
     "dispatch_category"
 ]
 
+LIST_OF_CAPITALIZE_TYPE: list = [
+    "type_of_transportation"
+]
+
 
 def telegram(message):
     chat_id = CHAT_ID

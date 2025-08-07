@@ -136,6 +136,8 @@ class Rzhd(object):
                     data[key] = self.convert_to_int(value)
                 elif key in LIST_SPLIT_MONTH:
                     self.split_month_and_year(data, key, value)
+                elif key in LIST_OF_CAPITALIZE_TYPE:
+                    data[key] = str(value).strip().capitalize() if value and value != "#" else None
 
     def save_data_to_file(self, i: int, chunk_data: list, sheet: str) -> None:
         """
