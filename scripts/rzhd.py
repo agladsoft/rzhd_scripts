@@ -119,7 +119,6 @@ class Rzhd(object):
                     df[column.replace("month", "year")] = None
                 df.replace({np.nan: None, np.NAN: None, np.NaN: None, "NaT": None}, inplace=True)
                 return df.to_dict('records')
-            return []
         return []
 
     def change_type(self, data: dict, index: int) -> None:

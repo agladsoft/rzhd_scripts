@@ -184,7 +184,6 @@ class RzhdKTK(Rzhd):
                 df = df.replace({np.nan: None, pd.NA: None})
                 df = df.applymap(lambda x: None if isinstance(x, str) and x.strip().upper() in ["NAN", "NAT"] else x)
                 return self.change_nan(df.reset_index().to_dict('records'))
-            return []
         return []
 
     def main(self) -> None:
