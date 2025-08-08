@@ -143,6 +143,9 @@ class Rzhd(object):
             
             if not reference_stations.empty:
                 logger.info("Setting index on departure_station_of_the_rf column")
+                # Дедуплицируем по названию станции, оставляем первую запись
+                reference_stations = reference_stations.drop_duplicates(subset=['departure_station_of_the_rf'], keep='first')
+                logger.info(f"After deduplication: {len(reference_stations)} unique stations")
                 reference_stations.set_index('departure_station_of_the_rf', inplace=True)
                 logger.info(f"Successfully loaded {len(reference_stations)} stations from reference")
                 return reference_stations
@@ -188,6 +191,7 @@ class Rzhd(object):
                     if station_name and station_name in stations_df.index:
                         try:
                             station_info = stations_df.loc[station_name]
+                            # После дедупликации всегда получаем Series с одной записью
                             data[f'{prefix}_station_type'] = station_info.get('departure_station_of_the_rf_type')
                             data[f'{prefix}_border_crossing_sign'] = station_info.get('sign_of_the_border_crossing_of_the_departure_of_the_rf')
                             data[f'{prefix}_station_sign'] = station_info.get('sign_of_departure_station_of_the_rf')
