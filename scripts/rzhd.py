@@ -240,8 +240,30 @@ class Rzhd(object):
                 for column in LIST_SPLIT_MONTH:
                     df[column.replace("month", "year")] = None
                 df.replace({np.nan: None, np.NAN: None, np.NaN: None, "NaT": None}, inplace=True)
-                return df.to_dict('records')
+                result = df.to_dict('records')
+                # Конвертируем pandas/numpy объекты в JSON-сериализуемые типы
+                return self.convert_pandas_objects(result)
         return []
+
+    @staticmethod
+    def convert_pandas_objects(result: list) -> list:
+        """
+        Конвертация pandas/numpy объектов в JSON-сериализуемые типы
+        """
+        for record in result:
+            for key, value in record.items():
+                if pd.isna(value):
+                    record[key] = None
+                elif isinstance(value, pd.Series):
+                    # Конвертируем pandas.Series в обычные Python типы
+                    if len(value) > 0:
+                        record[key] = value.iloc[0]  # Берем первое значение
+                    else:
+                        record[key] = None
+                elif hasattr(value, 'item'):
+                    # Конвертируем numpy типы в Python типы
+                    record[key] = value.item()
+        return result
 
     def change_type(self, data: dict, index: int) -> None:
         """

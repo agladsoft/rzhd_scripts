@@ -165,6 +165,15 @@ class RzhdKTK(Rzhd):
             for key, value in record.items():
                 if pd.isna(value):
                     record[key] = None
+                elif isinstance(value, pd.Series):
+                    # Конвертируем pandas.Series в обычные Python типы
+                    if len(value) > 0:
+                        record[key] = value.iloc[0]  # Берем первое значение
+                    else:
+                        record[key] = None
+                elif hasattr(value, 'item'):
+                    # Конвертируем numpy типы в Python типы
+                    record[key] = value.item()
         return result
 
     def convert_csv_to_dict(self, sheet: str, references: tuple) -> list:
