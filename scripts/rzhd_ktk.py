@@ -54,6 +54,7 @@ class RzhdKTK(Rzhd):
 
         return payer_of_the_railway_tariff
 
+
     def change_value(self, data: dict):
         if not data.get('name_of_cargo'):
             data['name_of_cargo'] = 'Пустой'
@@ -82,58 +83,65 @@ class RzhdKTK(Rzhd):
         columns = result.column_names  # Получаем названия столбцов
         return pd.DataFrame(data, columns=columns)
 
-    def get_reference(self, client):
+    def get_reference(self):
         """
-        Getting references
-        :param client: client Clickhouse
-        :return:
+        Загрузка справочников для pandas JOIN
         """
-        # Загружаем таблицы
-        reference_tonnage_query = "SELECT * FROM reference_tonnage"
-        reference_container_type_query = "SELECT * FROM reference_container_type"
-        reference_replace_company_name_query = "SELECT * FROM reference_replace_company_name"
-
-        reference_tonnage = self.query_to_dataframe(client, reference_tonnage_query)
-        reference_container_type = self.query_to_dataframe(client, reference_container_type_query)
-        reference_replace_company_name = self.query_to_dataframe(client, reference_replace_company_name_query)
-
-        reference_replace_company_name.rename(
-            columns={
-                "company_name": "payer_of_the_railway_tariff",
-                "company_name_unified": "payer_of_the_railway_tariff_unified"
-            },
-            inplace=True
-        )
-
-        reference_tonnage.set_index('container_tonnage', inplace=True)
-        reference_container_type.set_index('type_of_special_container', inplace=True)
-        reference_replace_company_name.set_index('payer_of_the_railway_tariff', inplace=True)
-
-        return reference_tonnage, \
-            reference_container_type, \
-            reference_replace_company_name
-
-    def connect_to_db(self):
-        """
-        Connecting to clickhouse.
-        :return: Client ClickHouse.
-        """
+        client = self.connect_to_clickhouse()
+        if client is None:
+            logger.error("No database connection for reference data")
+            return None, None, None
+            
         try:
-            client = get_client(host=get_my_env_var('HOST'), database=get_my_env_var('DATABASE'),
-                                username=get_my_env_var('USERNAME_DB'), password=get_my_env_var('PASSWORD'))
-            logger.info("Successfully connect to db")
+            # Загружаем только справочники для JOIN (без станций)
+            reference_tonnage_query = "SELECT * FROM reference_tonnage"
+            reference_container_type_query = "SELECT * FROM reference_container_type"
+            reference_replace_company_name_query = "SELECT * FROM reference_replace_company_name"
+
+            reference_tonnage = self.query_to_dataframe(client, reference_tonnage_query)
+            reference_container_type = self.query_to_dataframe(client, reference_container_type_query)
+            reference_replace_company_name = self.query_to_dataframe(client, reference_replace_company_name_query)
+
+            reference_replace_company_name.rename(
+                columns={
+                    "company_name": "payer_of_the_railway_tariff",
+                    "company_name_unified": "payer_of_the_railway_tariff_unified"
+                },
+                inplace=True
+            )
+
+            reference_tonnage.set_index('container_tonnage', inplace=True)
+            reference_container_type.set_index('type_of_special_container', inplace=True)
+            reference_replace_company_name.set_index('payer_of_the_railway_tariff', inplace=True)
+
+            return reference_tonnage, reference_container_type, reference_replace_company_name
+        except Exception as ex:
+            logger.error(f"Error loading reference data: {ex}")
+            return None, None, None
+
+    def get_containers_data(self):
+        """
+        Получение данных о контейнерах для проверки дубликатов
+        """
+        client = self.connect_to_clickhouse()
+        if client is None:
+            logger.error("No database connection for containers data")
+            telegram(f'Нет подключения к базе данных. Файл : {self.filename}')
+            sys.exit(1)
+            
+        try:
             rzhd_query = client.query(
                 "SELECT container_no, departure_date, name_of_cargo "
                 "FROM rzhd_ktk "
                 "GROUP BY container_no, departure_date, name_of_cargo"
             )
-            # Чтобы проверить, есть ли данные. Так как переменная образуется, но внутри нее могут быть ошибки.
-            print(rzhd_query.result_rows[0])
-            return self.get_dict_containers(rzhd_query), client
-        except Exception as ex_connect:
-            logger.error(f"Error connection to db {ex_connect}. Type error is {type(ex_connect)}.")
-            print("error_connect_db", file=sys.stderr)
-            telegram(f'Нет подключения к базе данных. Файл : {self.filename}')
+            # Чтобы проверить, есть ли данные
+            if rzhd_query.result_rows:
+                print(rzhd_query.result_rows[0])
+            return self.get_dict_containers(rzhd_query)
+        except Exception as ex:
+            logger.error(f"Error getting containers data: {ex}")
+            telegram(f'Ошибка получения данных о контейнерах. Файл: {self.filename}')
             sys.exit(1)
 
     @staticmethod
@@ -190,15 +198,20 @@ class RzhdKTK(Rzhd):
         """
         Parse data from Excel file and split it by chunks.
         """
-        date_and_containers, client = self.connect_to_db()
-        references = self.get_reference(client)
+        date_and_containers = self.get_containers_data()
+        references = self.get_reference()
+        stations_ref = self.get_stations_reference()  # Используем базовый метод
         xls = ExcelFile(self.filename)
         original_file_name = os.path.basename(self.filename)
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         for sheet in xls.sheet_names:
             parsed_data = self.get_last_data_with_dupl(self.convert_csv_to_dict(sheet, references))
-            divided_parsed_data = list(self.divide_chunks(parsed_data, 50000))
+
+            # Обогащение данных информацией о станциях (используем базовый метод)
+            enriched_data = self.enrich_with_stations(parsed_data, stations_ref)
+
+            divided_parsed_data = list(self.divide_chunks(enriched_data, 50000))
             original_file_index: int = 1
             for index, chunk in enumerate(divided_parsed_data):
                 for data in chunk:
@@ -206,13 +219,17 @@ class RzhdKTK(Rzhd):
                     self.change_value(data)
                     dep_date = self.convert_format_date(data["departure_date"])
                     if self.find_date_and_name_of_cargo(data, date_and_containers, dep_date):
-                        client.query(f"""
-                            ALTER TABLE rzhd.rzhd_ktk
-                            UPDATE is_obsolete=true
-                            WHERE departure_date = '{data['departure_date']}'
-                            AND container_no = '{data['container_no']}'
-                            AND name_of_cargo = '{data['name_of_cargo']}'
-                        """)
+                        if client := self.connect_to_clickhouse():
+                            try:
+                                client.query(f"""
+                                    ALTER TABLE rzhd.rzhd_ktk
+                                    UPDATE is_obsolete=true
+                                    WHERE departure_date = '{data['departure_date']}'
+                                    AND container_no = '{data['container_no']}'
+                                    AND name_of_cargo = '{data['name_of_cargo']}'
+                                """)
+                            except Exception as ex:
+                                logger.error(f"Error updating obsolete records: {ex}")
                     data.update({
                         'original_file_name': original_file_name,
                         'original_file_parsed_on': timestamp,
@@ -221,6 +238,9 @@ class RzhdKTK(Rzhd):
                     original_file_index += 1
 
                 self.save_data_to_file(index, chunk, sheet)
+
+        # Закрываем соединение через базовый метод
+        self.close_connection()
 
 
 if __name__ == "__main__":

@@ -6,10 +6,12 @@ import itertools
 import contextlib
 import app_logger
 import numpy as np
+import pandas as pd
 from __init__ import *
 from typing import Generator, Union
 from datetime import datetime, timedelta
 from pandas import DataFrame, read_excel, ExcelFile
+from clickhouse_connect import get_client
 
 logger: app_logger = app_logger.get_logger(str(os.path.basename(__file__).replace(".py", "")))
 
@@ -18,6 +20,7 @@ class Rzhd(object):
     def __init__(self, filename: str, folder: str):
         self.filename: str = filename
         self.folder: str = folder
+        self._client = None  # Кеш для подключения к БД
 
     @staticmethod
     def divide_chunks(list_data: list, chunk: int) -> Generator:
@@ -90,6 +93,106 @@ class Rzhd(object):
         delta_seconds: timedelta = timedelta(seconds=secs)
         time: datetime = (temp_date + delta_days + delta_seconds)
         return time.strftime("%Y-%m-%d")
+
+    @staticmethod
+    def query_to_dataframe(client, query):
+        """
+        Конвертация результата запроса ClickHouse в DataFrame
+        """
+        result = client.query(query)
+        data = result.result_rows
+        columns = result.column_names
+        return pd.DataFrame(data, columns=columns)
+
+    def connect_to_clickhouse(self):
+        """
+        Единое подключение к ClickHouse с кешированием соединения
+        """
+        if self._client is not None:
+            return self._client
+            
+        try:
+            self._client = get_client(
+                host=get_my_env_var('HOST'), 
+                database=get_my_env_var('DATABASE'),
+                username=get_my_env_var('USERNAME_DB'), 
+                password=get_my_env_var('PASSWORD')
+            )
+            logger.info("Successfully connected to ClickHouse")
+            return self._client
+        except Exception as ex:
+            logger.error(f"Error connecting to ClickHouse: {ex}")
+            telegram(f'Ошибка подключения к БД. Файл: {self.filename}. Ошибка: {ex}')
+            return None
+
+    def get_stations_reference(self):
+        """
+        Загрузка справочника станций РФ и СНГ
+        """
+        client = self.connect_to_clickhouse()
+        if client is None:
+            logger.warning("No database connection, stations enrichment will be skipped")
+            return None
+        
+        try:
+            reference_stations_query = "SELECT * FROM reference_departure_stations_rf"
+            reference_stations = self.query_to_dataframe(client, reference_stations_query)
+            
+            if not reference_stations.empty:
+                reference_stations.set_index('departure_station_of_the_rf', inplace=True)
+                logger.info(f"Loaded {len(reference_stations)} stations from reference")
+                return reference_stations
+            else:
+                logger.warning("Stations reference table is empty")
+                return None
+        except Exception as ex:
+            logger.error(f"Error loading stations reference: {ex}")
+            return None
+
+    def enrich_with_stations(self, data_list: list, stations_df=None):
+        """
+        Обогащение данных информацией о всех типах станций (РФ и СНГ, отправления и назначения)
+        """
+        if stations_df is None:
+            stations_df = self.get_stations_reference()
+            
+        if stations_df is None or stations_df.empty:
+            logger.info("Skipping stations enrichment - no reference data")
+            return data_list
+            
+        enriched_count = 0
+        for data in data_list:
+            # Обогащение для всех типов станций из одного справочника
+            stations_to_check = [
+                ('departure_station_of_the_rf', 'departure_rf'),
+                ('cis_departure_station', 'departure_cis'),
+                ('rf_destination_station', 'destination_rf'), 
+                ('cis_destination_station', 'destination_cis')
+            ]
+            
+            for station_field, prefix in stations_to_check:
+                station_name = data.get(station_field)
+                if station_name and station_name in stations_df.index:
+                    station_info = stations_df.loc[station_name]
+                    data[f'{prefix}_station_type'] = station_info.get('departure_station_of_the_rf_type')
+                    data[f'{prefix}_border_crossing_sign'] = station_info.get('sign_of_the_border_crossing_of_the_departure_of_the_rf')
+                    data[f'{prefix}_station_sign'] = station_info.get('sign_of_departure_station_of_the_rf')
+                    enriched_count += 1
+        
+        logger.info(f"Enriched {enriched_count} station records with reference data")
+        return data_list
+
+    def close_connection(self):
+        """
+        Закрытие подключения к БД с proper cleanup
+        """
+        if self._client:
+            try:
+                self._client.close()
+                self._client = None
+                logger.info("ClickHouse connection closed")
+            except Exception as ex:
+                logger.error(f"Error closing ClickHouse connection: {ex}")
 
     def convert_format_date(self, date: str) -> Union[str, datetime.date, None]:
         """
@@ -165,6 +268,9 @@ class Rzhd(object):
                     original_file_index += 1
             for index, chunk_parsed_data in enumerate(divided_parsed_data):
                 self.save_data_to_file(index, chunk_parsed_data, sheet)
+        
+        # Закрытие соединения с БД
+        self.close_connection()
 
 
 if __name__ == "__main__":
