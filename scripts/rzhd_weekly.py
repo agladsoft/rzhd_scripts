@@ -53,33 +53,53 @@ class RzhdWeekly(Rzhd):
         """
         Parse data from Excel file, enrich with stations data, and split it by chunks.
         """
+        logger.info("Starting weekly processing")
         # Загрузка справочника станций через базовый метод
+        logger.info("Loading stations reference")
         stations_ref = self.get_stations_reference()
 
+        logger.info("Opening Excel file")
         xls = ExcelFile(self.filename)
         original_file_index: int = 1
 
         for sheet in xls.sheet_names:
+            logger.info(f"Processing sheet: {sheet}")
+            logger.info("Converting CSV to dict")
             parsed_data: list = self.convert_csv_to_dict(sheet, ())
+            logger.info(f"Parsed {len(parsed_data)} records from sheet {sheet}")
 
             # Обогащение данных информацией о станциях (используем базовый метод)
+            logger.info("Starting station enrichment")
             enriched_data = self.enrich_with_stations(parsed_data, stations_ref)
+            logger.info("Station enrichment completed")
 
+            logger.info("Dividing data into chunks")
             divided_parsed_data: list = list(self.divide_chunks(enriched_data, 50000))
+            logger.info(f"Created {len(divided_parsed_data)} chunks")
 
-            for chunk_parsed_data in divided_parsed_data:
+            for chunk_index, chunk_parsed_data in enumerate(divided_parsed_data):
+                logger.info(f"Processing chunk {chunk_index} with {len(chunk_parsed_data)} records")
                 for dict_data in chunk_parsed_data:
-                    self.change_type(dict_data, original_file_index)
-                    dict_data['original_file_name'] = os.path.basename(self.filename)
-                    dict_data['original_file_parsed_on'] = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                    dict_data['original_file_index'] = original_file_index
-                    original_file_index += 1
+                    try:
+                        self.change_type(dict_data, original_file_index)
+                        dict_data['original_file_name'] = os.path.basename(self.filename)
+                        dict_data['original_file_parsed_on'] = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                        dict_data['original_file_index'] = original_file_index
+                        original_file_index += 1
+                    except Exception as ex:
+                        logger.error(f"Error processing record {original_file_index} in chunk {chunk_index}: {ex}")
+                        original_file_index += 1
+                        continue
 
             for index, chunk_parsed_data in enumerate(divided_parsed_data):
+                logger.info(f"Saving chunk {index} to file")
                 self.save_data_to_file(index, chunk_parsed_data, sheet)
+                logger.info(f"Chunk {index} saved successfully")
 
         # Закрытие соединения через базовый метод
+        logger.info("Closing database connection")
         self.close_connection()
+        logger.info("Weekly processing completed")
 
 
 if __name__ == "__main__":

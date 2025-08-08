@@ -136,12 +136,15 @@ class Rzhd(object):
             return None
         
         try:
+            logger.info("Executing stations reference query")
             reference_stations_query = "SELECT * FROM reference_departure_stations_rf"
             reference_stations = self.query_to_dataframe(client, reference_stations_query)
+            logger.info(f"Query executed, got {len(reference_stations)} rows")
             
             if not reference_stations.empty:
+                logger.info("Setting index on departure_station_of_the_rf column")
                 reference_stations.set_index('departure_station_of_the_rf', inplace=True)
-                logger.info(f"Loaded {len(reference_stations)} stations from reference")
+                logger.info(f"Successfully loaded {len(reference_stations)} stations from reference")
                 return reference_stations
             else:
                 logger.warning("Stations reference table is empty")
@@ -154,34 +157,49 @@ class Rzhd(object):
         """
         Обогащение данных информацией о всех типах станций (РФ и СНГ, отправления и назначения)
         """
+        logger.info(f"Starting station enrichment for {len(data_list)} records")
+        
         if stations_df is None:
+            logger.info("Stations DataFrame not provided, loading from database")
             stations_df = self.get_stations_reference()
             
         if stations_df is None or stations_df.empty:
             logger.info("Skipping stations enrichment - no reference data")
             return data_list
             
+        logger.info(f"Using stations reference with {len(stations_df)} stations")
         enriched_count = 0
-        for data in data_list:
-            # Обогащение для всех типов станций из одного справочника
-            stations_to_check = [
-                ('departure_station_of_the_rf', 'departure_rf'),
-                ('cis_departure_station', 'departure_cis'),
-                ('rf_destination_station', 'destination_rf'), 
-                ('cis_destination_station', 'destination_cis')
-            ]
-            
-            for station_field, prefix in stations_to_check:
-                station_name = data.get(station_field)
-                if station_name and station_name in stations_df.index:
-                    station_info = stations_df.loc[station_name]
-                    data[f'{prefix}_station_type'] = station_info.get('departure_station_of_the_rf_type')
-                    data[f'{prefix}_border_crossing_sign'] = station_info.get('sign_of_the_border_crossing_of_the_departure_of_the_rf')
-                    data[f'{prefix}_station_sign'] = station_info.get('sign_of_departure_station_of_the_rf')
-                    enriched_count += 1
         
-        logger.info(f"Enriched {enriched_count} station records with reference data")
-        return data_list
+        try:
+            for i, data in enumerate(data_list):
+                if i % 10000 == 0:  # Лог каждые 10k записей
+                    logger.info(f"Processing record {i} of {len(data_list)}")
+                    
+                # Обогащение для всех типов станций из одного справочника
+                stations_to_check = [
+                    ('departure_station_of_the_rf', 'departure_rf'),
+                    ('cis_departure_station', 'departure_cis'),
+                    ('rf_destination_station', 'destination_rf'), 
+                    ('cis_destination_station', 'destination_cis')
+                ]
+                
+                for station_field, prefix in stations_to_check:
+                    station_name = data.get(station_field)
+                    if station_name and station_name in stations_df.index:
+                        try:
+                            station_info = stations_df.loc[station_name]
+                            data[f'{prefix}_station_type'] = station_info.get('departure_station_of_the_rf_type')
+                            data[f'{prefix}_border_crossing_sign'] = station_info.get('sign_of_the_border_crossing_of_the_departure_of_the_rf')
+                            data[f'{prefix}_station_sign'] = station_info.get('sign_of_departure_station_of_the_rf')
+                            enriched_count += 1
+                        except Exception as ex:
+                            logger.error(f"Error enriching station {station_name} for field {station_field}: {ex}")
+            
+            logger.info(f"Successfully enriched {enriched_count} station records with reference data")
+            return data_list
+        except Exception as ex:
+            logger.error(f"Critical error during station enrichment: {ex}")
+            return data_list  # Возвращаем необогащенные данные
 
     def close_connection(self):
         """

@@ -206,38 +206,51 @@ class RzhdKTK(Rzhd):
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         for sheet in xls.sheet_names:
+            logger.info(f"Processing sheet: {sheet}")
+            logger.info("Converting CSV to dict")
             parsed_data = self.get_last_data_with_dupl(self.convert_csv_to_dict(sheet, references))
+            logger.info(f"Parsed {len(parsed_data)} records from sheet {sheet}")
 
             # Обогащение данных информацией о станциях (используем базовый метод)
+            logger.info("Starting station enrichment")
             enriched_data = self.enrich_with_stations(parsed_data, stations_ref)
+            logger.info("Station enrichment completed")
 
             divided_parsed_data = list(self.divide_chunks(enriched_data, 50000))
             original_file_index: int = 1
             for index, chunk in enumerate(divided_parsed_data):
+                logger.info(f"Processing chunk {index} with {len(chunk)} records")
                 for data in chunk:
-                    self.change_type(data, original_file_index)
-                    self.change_value(data)
-                    dep_date = self.convert_format_date(data["departure_date"])
-                    if self.find_date_and_name_of_cargo(data, date_and_containers, dep_date):
-                        if client := self.connect_to_clickhouse():
-                            try:
-                                client.query(f"""
-                                    ALTER TABLE rzhd.rzhd_ktk
-                                    UPDATE is_obsolete=true
-                                    WHERE departure_date = '{data['departure_date']}'
-                                    AND container_no = '{data['container_no']}'
-                                    AND name_of_cargo = '{data['name_of_cargo']}'
-                                """)
-                            except Exception as ex:
-                                logger.error(f"Error updating obsolete records: {ex}")
-                    data.update({
-                        'original_file_name': original_file_name,
-                        'original_file_parsed_on': timestamp,
-                        'original_file_index': original_file_index
-                    })
-                    original_file_index += 1
+                    try:
+                        self.change_type(data, original_file_index)
+                        self.change_value(data)
+                        dep_date = self.convert_format_date(data["departure_date"])
+                        if self.find_date_and_name_of_cargo(data, date_and_containers, dep_date):
+                            if client := self.connect_to_clickhouse():
+                                try:
+                                    client.query(f"""
+                                        ALTER TABLE rzhd.rzhd_ktk
+                                        UPDATE is_obsolete=true
+                                        WHERE departure_date = '{data['departure_date']}'
+                                        AND container_no = '{data['container_no']}'
+                                        AND name_of_cargo = '{data['name_of_cargo']}'
+                                    """)
+                                except Exception as ex:
+                                    logger.error(f"Error updating obsolete records: {ex}")
+                        data.update({
+                            'original_file_name': original_file_name,
+                            'original_file_parsed_on': timestamp,
+                            'original_file_index': original_file_index
+                        })
+                        original_file_index += 1
+                    except Exception as ex:
+                        logger.error(f"Error processing record {original_file_index}: {ex}")
+                        original_file_index += 1
+                        continue
 
+                logger.info(f"Saving chunk {index} to file")
                 self.save_data_to_file(index, chunk, sheet)
+                logger.info(f"Chunk {index} saved successfully")
 
         # Закрываем соединение через базовый метод
         self.close_connection()
