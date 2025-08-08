@@ -106,7 +106,7 @@ class Rzhd(object):
 
     def connect_to_clickhouse(self):
         """
-        Единое подключение к ClickHouse с кешированием соединения
+        Единое подключение к ClickHouse с обязательным подключением
         """
         if self._client is not None:
             return self._client
@@ -123,7 +123,8 @@ class Rzhd(object):
         except Exception as ex:
             logger.error(f"Error connecting to ClickHouse: {ex}")
             telegram(f'Ошибка подключения к БД. Файл: {self.filename}. Ошибка: {ex}')
-            return None
+            print("error_connect_db", file=sys.stderr)
+            sys.exit(1)
 
     def get_stations_reference(self):
         """
