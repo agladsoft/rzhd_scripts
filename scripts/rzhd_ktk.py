@@ -62,16 +62,17 @@ class RzhdKTK(Rzhd):
             ]
             if not station_info.empty:
                 row = station_info.iloc[0]
-                if station_type == 'departure_rf':
+                # Определяем куда записывать данные на основе поля station_field
+                if station_field == 'departure_station_of_the_rf':
                     data['sign_of_departure_station_of_the_rf'] = row.get('sign_of_departure_station_of_the_rf')
                     data['sign_of_the_border_crossing_of_the_departure_of_the_rf'] = row.get('sign_of_the_border_crossing_of_the_departure_of_the_rf')
-                elif station_type == 'departure_cis':
+                elif station_field == 'cis_departure_station':
                     data['sign_of_the_departure_station_of_the_cis'] = row.get('sign_of_departure_station_of_the_rf')
                     data['sign_of_the_border_crossing_of_the_departure_of_the_cis'] = row.get('sign_of_the_border_crossing_of_the_departure_of_the_rf')
-                elif station_type == 'destination_rf':
+                elif station_field == 'rf_destination_station':
                     data['sign_of_destination_station_of_the_rf'] = row.get('sign_of_departure_station_of_the_rf')
                     data['sign_of_the_border_crossing_of_the_destination_of_the_rf'] = row.get('sign_of_the_border_crossing_of_the_departure_of_the_rf')
-                elif station_type == 'destination_cis':
+                elif station_field == 'cis_destination_station':
                     data['sign_of_destination_station_of_the_cis'] = row.get('sign_of_departure_station_of_the_rf')
                     data['sign_of_the_border_crossing_of_the_destination_of_the_cis'] = row.get('sign_of_the_border_crossing_of_the_departure_of_the_rf')
 
@@ -89,10 +90,10 @@ class RzhdKTK(Rzhd):
             data['payer_of_the_railway_tariff_unified'] = data['payer_of_the_railway_tariff']
         
         if station_reference is not None:
-            self.enrich_station_data(data, station_reference, 'departure_station_of_the_rf', 'departure_rf')
-            self.enrich_station_data(data, station_reference, 'cis_departure_station', 'departure_cis')
-            self.enrich_station_data(data, station_reference, 'rf_destination_station', 'destination_rf')
-            self.enrich_station_data(data, station_reference, 'cis_destination_station', 'destination_cis')
+            self.enrich_station_data(data, station_reference, 'departure_station_of_the_rf', 'Станция РФ')
+            self.enrich_station_data(data, station_reference, 'cis_departure_station', 'Станция СНГ')
+            self.enrich_station_data(data, station_reference, 'rf_destination_station', 'Станция РФ')
+            self.enrich_station_data(data, station_reference, 'cis_destination_station', 'Станция СНГ')
 
     @staticmethod
     def get_dict_containers(rzhd_query):
