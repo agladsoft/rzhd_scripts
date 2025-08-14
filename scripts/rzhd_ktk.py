@@ -54,7 +54,29 @@ class RzhdKTK(Rzhd):
 
         return payer_of_the_railway_tariff
 
-    def change_value(self, data: dict):
+    def enrich_station_data(self, data: dict, reference: pd.DataFrame, station_field: str, station_type: str):
+        if data.get(station_field):
+            station_info = reference[
+                (reference['departure_station_of_the_rf'] == data[station_field]) & 
+                (reference['departure_station_of_the_rf_type'] == station_type)
+            ]
+            if not station_info.empty:
+                row = station_info.iloc[0]
+                # Определяем куда записывать данные на основе поля station_field
+                if station_field == 'departure_station_of_the_rf':
+                    data['sign_of_departure_station_of_the_rf'] = row.get('sign_of_departure_station_of_the_rf')
+                    data['sign_of_the_border_crossing_of_the_departure_of_the_rf'] = row.get('sign_of_the_border_crossing_of_the_departure_of_the_rf')
+                elif station_field == 'cis_departure_station':
+                    data['sign_of_the_departure_station_of_the_cis'] = row.get('sign_of_departure_station_of_the_rf')
+                    data['sign_of_the_border_crossing_of_the_departure_of_the_cis'] = row.get('sign_of_the_border_crossing_of_the_departure_of_the_rf')
+                elif station_field == 'rf_destination_station':
+                    data['sign_of_destination_station_of_the_rf'] = row.get('sign_of_departure_station_of_the_rf')
+                    data['sign_of_the_border_crossing_of_the_destination_of_the_rf'] = row.get('sign_of_the_border_crossing_of_the_departure_of_the_rf')
+                elif station_field == 'cis_destination_station':
+                    data['sign_of_destination_station_of_the_cis'] = row.get('sign_of_departure_station_of_the_rf')
+                    data['sign_of_the_border_crossing_of_the_destination_of_the_cis'] = row.get('sign_of_the_border_crossing_of_the_departure_of_the_rf')
+
+    def change_value(self, data: dict, station_reference: pd.DataFrame = None):
         if not data.get('name_of_cargo'):
             data['name_of_cargo'] = 'Пустой'
         if data.get('payer_of_the_railway_tariff'):
@@ -66,6 +88,12 @@ class RzhdKTK(Rzhd):
             data['payer_of_the_railway_tariff'] = payer_of_the_railway_tariff
         if not data.get('payer_of_the_railway_tariff_unified'):
             data['payer_of_the_railway_tariff_unified'] = data['payer_of_the_railway_tariff']
+        
+        if station_reference is not None:
+            self.enrich_station_data(data, station_reference, 'departure_station_of_the_rf', 'Станция РФ')
+            self.enrich_station_data(data, station_reference, 'cis_departure_station', 'Станция СНГ')
+            self.enrich_station_data(data, station_reference, 'rf_destination_station', 'Станция РФ')
+            self.enrich_station_data(data, station_reference, 'cis_destination_station', 'Станция СНГ')
 
     @staticmethod
     def get_dict_containers(rzhd_query):
@@ -92,10 +120,12 @@ class RzhdKTK(Rzhd):
         reference_tonnage_query = "SELECT * FROM reference_tonnage"
         reference_container_type_query = "SELECT * FROM reference_container_type"
         reference_replace_company_name_query = "SELECT * FROM reference_replace_company_name"
+        reference_stations_query = "SELECT * FROM reference_stations_rf_cis"
 
         reference_tonnage = self.query_to_dataframe(client, reference_tonnage_query)
         reference_container_type = self.query_to_dataframe(client, reference_container_type_query)
         reference_replace_company_name = self.query_to_dataframe(client, reference_replace_company_name_query)
+        reference_stations = self.query_to_dataframe(client, reference_stations_query)
 
         reference_replace_company_name.rename(
             columns={
@@ -111,7 +141,8 @@ class RzhdKTK(Rzhd):
 
         return reference_tonnage, \
             reference_container_type, \
-            reference_replace_company_name
+            reference_replace_company_name, \
+            reference_stations
 
     def connect_to_db(self):
         """
@@ -203,7 +234,7 @@ class RzhdKTK(Rzhd):
             for index, chunk in enumerate(divided_parsed_data):
                 for data in chunk:
                     self.change_type(data, original_file_index)
-                    self.change_value(data)
+                    self.change_value(data, references[3])
                     dep_date = self.convert_format_date(data["departure_date"])
                     if self.find_date_and_name_of_cargo(data, date_and_containers, dep_date):
                         client.query(f"""
