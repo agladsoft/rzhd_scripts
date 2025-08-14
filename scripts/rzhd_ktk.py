@@ -120,7 +120,7 @@ class RzhdKTK(Rzhd):
         reference_tonnage_query = "SELECT * FROM reference_tonnage"
         reference_container_type_query = "SELECT * FROM reference_container_type"
         reference_replace_company_name_query = "SELECT * FROM reference_replace_company_name"
-        reference_stations_query = "SELECT * FROM reference_departure_stations_rf"
+        reference_stations_query = "SELECT * FROM reference_stations_rf_cis"
 
         reference_tonnage = self.query_to_dataframe(client, reference_tonnage_query)
         reference_container_type = self.query_to_dataframe(client, reference_container_type_query)
